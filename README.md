@@ -63,6 +63,8 @@ npm run dev                     # http://localhost:3000
 
 `.env.local` **nuk** hyn në git. Asnjë sekret nuk është në repository.
 
+> **Antivirus (p.sh. Avast Web Shield) dhe “fetch failed / UNABLE_TO_VERIFY_LEAF_SIGNATURE”:** antivirusi e inspekton HTTPS-in dhe e zëvendëson certifikatën e Neon me të vetën. Prandaj `npm run dev` e nis Next.js me `node --use-system-ca`, që Node të besojë certifikatat e Windows-it. Mos përdor `NODE_TLS_REJECT_UNAUTHORIZED=0`, sepse e çaktivizon sigurinë TLS.
+
 ## Komandat
 
 ```bash
