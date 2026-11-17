@@ -9,6 +9,7 @@ import { dozat, formatoAfatin, kaSkaduar } from "@/lib/format";
 import Progresi from "@/components/Progresi";
 import GabimDB from "@/components/GabimDB";
 import DoTeShkoj from "@/components/DoTeShkoj";
+import LiveRifreskim from "@/components/LiveRifreskim";
 import { mbyllKerkesen, anuloPjesemarrjen, konfirmoDhurimInAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +77,7 @@ export default async function Detajet({ params, searchParams }: {
         {kerkesa.urgjente && aktive && <p><span className="pill pill-urgent">Urgjente</span></p>}
         {kerkesa.pershkrimi && <p>{kerkesa.pershkrimi}</p>}
         {!butoniOptimist && <Progresi pranuar={kerkesa.pranuar} dozat={kerkesa.dozat} />}
+        {aktive && <LiveRifreskim url={`/api/kerkesat/${kerkesa.id}/gjendja`} />}
         <p className="muted small">Mund të dhurojnë grupet: <strong>{grupetDhuruese(kerkesa.grupi).join(", ")}</strong></p>
 
         {/* Pamja e dhuruesit */}
