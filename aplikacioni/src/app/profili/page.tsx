@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { perdoruesiIm, profiliIPlote, type Perdorues } from "@/lib/lejet";
+import { pjesemarrjetEMia, type PjesemarrjaIme } from "@/lib/pergjigjet";
 import { ofruesitAktive } from "@/lib/auth";
+import { formatoAfatin } from "@/lib/format";
 import { ButonatEHyrjes, ButoniDalja } from "@/components/Hyrja";
 import FormaProfilit from "@/components/FormaProfilit";
+import StatusiDhuruesit from "@/components/StatusiDhuruesit";
 import GabimDB from "@/components/GabimDB";
 
 export const metadata: Metadata = { title: "Profili" };
@@ -11,8 +14,13 @@ export const dynamic = "force-dynamic";
 
 export default async function Profili() {
   let p: Perdorues | null;
-  try { p = await perdoruesiIm(); }
-  catch { return <main><h1>Profili im</h1><GabimDB provo="/profili" /></main>; }
+  let pjesemarrjet: PjesemarrjaIme[] = [];
+  try {
+    p = await perdoruesiIm();
+    if (p) pjesemarrjet = await pjesemarrjetEMia(p.id);
+  } catch {
+    return <main><h1>Profili im</h1><GabimDB provo="/profili" /></main>;
+  }
 
   if (!p) {
     return (
@@ -35,6 +43,23 @@ export default async function Profili() {
         </div>
         <ButoniDalja />
       </div>
+
+      <StatusiDhuruesit p={p} />
+
+      {pjesemarrjet.length > 0 && (
+        <section className="card">
+          <h2>Pjesëmarrjet e mia</h2>
+          {pjesemarrjet.map((x) => (
+            <div className="donor-row" key={x.kerkesa_id}>
+              <Link href={`/kerkesa/${x.kerkesa_id}`}><strong>{x.grupi}</strong> · {x.spitali}</Link>
+              <span className={`pill ${x.statusi === "dhuroi" ? "pill-ok" : "pill-wait"}`}>
+                {x.statusi === "dhuroi" ? "Dhurova ✅" : formatoAfatin(x.afati)}
+              </span>
+            </div>
+          ))}
+        </section>
+      )}
+
       <FormaProfilit p={p} />
       <p className="small muted">Kërkesat që ke postuar i gjen te <Link href="/kerkesa/e-mia">Kërkesat e mia</Link>.</p>
     </main>

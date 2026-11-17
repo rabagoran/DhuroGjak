@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { perdoruesiIm } from "@/lib/lejet";
 import { validoKerkesen } from "@/lib/validimi";
 import { krijoKerkesen, ndryshoStatusin } from "@/lib/kerkesat";
+import { pergjigjuNeKerkese, anuloPergjigjen, konfirmoDhurimin } from "@/lib/pergjigjet";
 
 export type GjendjaKerkeses = { ok: boolean; mesazh: string; gabimet?: Record<string, string>; vlerat?: Record<string, string> };
 
@@ -36,4 +37,53 @@ export async function mbyllKerkesen(formData: FormData) {
   }
   if (m === "ruajtur") revalidatePath("/");
   redirect(`/kerkesa/${encodeURIComponent(id)}?m=${m === "ruajtur" ? statusi : m}`);
+}
+
+// ---- Java 7: “Do të shkoj”, anulimi dhe konfirmimi i dhurimit ----
+
+export async function doTeShkoj(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  let m: string;
+  try {
+    const p = await perdoruesiIm();
+    m = p ? await pergjigjuNeKerkese(p, id) : "hyr";
+  } catch {
+    m = "databaza";
+  }
+  if (m === "hyr") redirect(`/hyrja?callbackUrl=${encodeURIComponent(`/kerkesa/${id}`)}`);
+  revalidatePath("/");
+  if (m === "ok" || m === "ekziston") redirect(`/kerkesa/${encodeURIComponent(id)}/pergjigja`);
+  redirect(`/kerkesa/${encodeURIComponent(id)}?m=${m}`);
+}
+
+export async function anuloPjesemarrjen(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  let m = "anuluar-pjesemarrja";
+  try {
+    const p = await perdoruesiIm();
+    if (!p) m = "hyr";
+    else if (!(await anuloPergjigjen(p, id))) m = "ndaluar";
+  } catch {
+    m = "databaza";
+  }
+  revalidatePath("/");
+  redirect(`/kerkesa/${encodeURIComponent(id)}?m=${m}`);
+}
+
+export async function konfirmoDhurimInAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const pergjigjeId = String(formData.get("pergjigje") ?? "");
+  let m: string;
+  try {
+    const p = await perdoruesiIm();
+    if (!p) m = "hyr";
+    else {
+      const r = await konfirmoDhurimin(p, id, pergjigjeId);
+      m = !r.konfirmuar ? "ndaluar" : r.perfunduar ? "perfunduar-auto" : "konfirmuar";
+    }
+  } catch {
+    m = "databaza";
+  }
+  revalidatePath("/");
+  redirect(`/kerkesa/${encodeURIComponent(id)}?m=${m}`);
 }

@@ -20,7 +20,9 @@ export type Kerkese = {
   krijuar_nga: string | null;
 };
 
-const KOLONAT = `id::text AS id, grupi, spitali, qyteti, dozat, afati, pershkrimi, urgjente, statusi, krijuar_nga, 0 AS pranuar`;
+// `pranuar` = dhurues që kanë shtypur “Do të shkoj” ose kanë dhuruar (Java 7).
+const KOLONAT = `id::text AS id, grupi, spitali, qyteti, dozat, afati, pershkrimi, urgjente, statusi, krijuar_nga,
+  (SELECT COUNT(*) FROM pergjigjet p WHERE p.kerkesa_id = kerkesat.id AND p.statusi IN ('do_shkoj', 'dhuroi'))::int AS pranuar`;
 
 export async function lexoKerkesat(): Promise<Kerkese[]> {
   const sql = getSql();
