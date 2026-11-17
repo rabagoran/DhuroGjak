@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { doTeShkojOptimist } from "@/app/kerkesa/actions";
@@ -23,9 +23,12 @@ export default function DoTeShkoj({ kerkesaId, pranuar, dozat, kaHyre }: {
   const [, startTransition] = useTransition();
 
   // Java 10: kur polling-u sjell numër të ri nga serveri, përditëso (përveç gjatë dërgimit).
-  useEffect(() => {
+  // Modeli “përshtat gjendjen gjatë render-it” i React (pa useEffect, pa render të dyfishtë).
+  const [pranuarIFundit, setPranuarIFundit] = useState(pranuar);
+  if (pranuar !== pranuarIFundit) {
+    setPranuarIFundit(pranuar);
     if (gjendja === "gati" || gjendja === "gabim") setNumri(pranuar);
-  }, [pranuar]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   function kliko() {
     if (!kaHyre) { router.push(`/hyrja?callbackUrl=${encodeURIComponent(`/kerkesa/${kerkesaId}`)}`); return; }

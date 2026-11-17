@@ -1,0 +1,29 @@
+# Java 14 — CI: çdo push/PR kontrollon lint, testet dhe build-in.
+# CD: Vercel e publikon automatikisht degën main pasi lidhet me repository-n.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  kontrollo:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aplikacioni
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: aplikacioni/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          # Build-i nuk lidhet me databazën (faqet janë dinamike); vlerë false vetëm që të mos mungojë.
+          NEXTAUTH_SECRET: ci-placeholder-not-a-secret

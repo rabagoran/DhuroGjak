@@ -19,7 +19,8 @@ export function telefonValid(v: string): boolean {
 
 /** Java 12: gjaku nuk shitet (OBSH). Refuzo tekstet që ofrojnë/kërkojnë para. */
 export function kaOferteParash(t: string): boolean {
-  return /(€|\$|\b\d+\s*(euro|eur|lek[eë]?|den[aá]r)\b|\b(pages[eë]|paguaj|paguhet|paguajm[eë]|shp[eë]rblim\w*|honorar|cmim\w*|çmim\w*|shes|blej)\b)/i.test(t);
+  // `\b` nuk i njeh shkronjat shqipe (ë, ç), prandaj kufijtë e fjalës janë me \p{L} (Unicode).
+  return /(€|\$|(?<![\p{L}\d])\d+\s*(euro|eur|lek[eë]?|den[aá]r)(?!\p{L})|(?<!\p{L})(pages[eë]|paguaj\p{L}*|paguhet|shp[eë]rblim\p{L}*|honorar\p{L}*|[cç]mim\p{L}*|shes|blej)(?!\p{L}))/iu.test(t);
 }
 
 export function kaLidhje(t: string): boolean {

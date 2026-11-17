@@ -20,13 +20,17 @@ export default function NjoftimetPush() {
   const [mesazhi, setMesazhi] = useState("");
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) { setGjendja("pambeshtetur"); return; }
-    if (!celesi) { setGjendja("pa-celes"); return; }
-    if (Notification.permission === "denied") { setGjendja("refuzuar"); return; }
-    navigator.serviceWorker.ready
-      .then((reg) => reg.pushManager.getSubscription())
-      .then((sub) => setGjendja(sub ? "ndezur" : "fikur"))
-      .catch(() => setGjendja("fikur"));
+    // Kontrolli bëhet vetëm në shfletues (serveri nuk ka `navigator`), pas montimit.
+    let aktiv = true;
+    async function kontrollo(): Promise<Gjendja> {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return "pambeshtetur";
+      if (!celesi) return "pa-celes";
+      if (Notification.permission === "denied") return "refuzuar";
+      const reg = await navigator.serviceWorker.ready;
+      return (await reg.pushManager.getSubscription()) ? "ndezur" : "fikur";
+    }
+    kontrollo().catch(() => "fikur" as const).then((g) => { if (aktiv) setGjendja(g); });
+    return () => { aktiv = false; };
   }, [celesi]);
 
   async function ndiz() {

@@ -17,7 +17,7 @@ export default function FormaKerkeses({ qytetiIm, telefoniIm }: { qytetiIm: stri
   const g = gjendja.gabimet ?? {};
   const v = gjendja.vlerat;
   const [grupi, setGrupi] = useState<GrupGjaku | null>((v?.grupi as GrupGjaku) ?? null);
-  const [afatiLokal, setAfatiLokal] = useState(v?.afati_lokal ?? lokal(new Date(Date.now() + 6 * 3600e3)));
+  const [afatiLokal, setAfatiLokal] = useState(() => v?.afati_lokal ?? lokal(new Date(Date.now() + 6 * 3600e3)));
   const afatiISO = afatiLokal ? new Date(afatiLokal).toISOString() : "";
 
   return (
@@ -58,7 +58,7 @@ export default function FormaKerkeses({ qytetiIm, telefoniIm }: { qytetiIm: stri
       <div className="grid-2">
         <div className="field">
           <label htmlFor="afati_lokal">Afati</label>
-          <input id="afati_lokal" name="afati_lokal" type="datetime-local" value={afatiLokal} onChange={(e) => setAfatiLokal(e.target.value)} required aria-invalid={!!g.afati} />
+          <input id="afati_lokal" name="afati_lokal" type="datetime-local" suppressHydrationWarning value={afatiLokal} onChange={(e) => setAfatiLokal(e.target.value)} required aria-invalid={!!g.afati} />
           <input type="hidden" name="afati" value={afatiISO} />
           <Gabim teksti={g.afati} />
         </div>
