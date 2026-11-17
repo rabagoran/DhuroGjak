@@ -1,0 +1,197 @@
+/* DhuroGjak — e kuqe me të bardhë (e pastër, mjekësore). Mobile-first. */
+:root {
+  --red: #b91c1c;
+  --red-dark: #7f1d1d;
+  --red-soft: #fde8e8;
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --text: #1a1a1f;
+  --muted: #5b5b66;
+  --border: #e3e3e8;
+  --green: #15803d;
+  --green-soft: #e7f6ec;
+  --amber: #a16207;
+  --amber-soft: #fef6dc;
+  --focus: #1d4ed8;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 4px 14px rgb(0 0 0 / 5%);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --red: #ef4444;
+    --red-dark: #fca5a5;
+    --red-soft: #3a1416;
+    --bg: #111114;
+    --surface: #1b1b20;
+    --text: #f2f2f5;
+    --muted: #a6a6b2;
+    --border: #2e2e36;
+    --green: #4ade80;
+    --green-soft: #13301e;
+    --amber: #facc15;
+    --amber-soft: #332a0b;
+    --focus: #93c5fd;
+    --shadow: none;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+}
+a { color: var(--red); }
+h1, h2, h3 { line-height: 1.25; margin: 0 0 8px; }
+h1 { font-size: clamp(24px, 6vw, 32px); }
+h2 { font-size: 18px; }
+p { margin: 0 0 10px; }
+code { overflow-wrap: anywhere; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Shiriti i sipërm */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--red); color: #fff;
+  padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top));
+}
+.topbar-inner { max-width: 760px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { color: #fff; text-decoration: none; font-weight: 800; font-size: 20px; display: inline-flex; align-items: center; gap: 8px; }
+.topbar a.topbar-link { color: #fff; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }
+.bell { position: relative; text-decoration: none; font-size: 22px; min-width: 44px; justify-content: center; }
+.bell-count {
+  position: absolute; top: 4px; right: 0; min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 10px; background: #fff; color: var(--red); font-size: 12px; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+main { max-width: 760px; margin: auto; padding: 20px 16px 32px; }
+.page-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.stack { display: grid; gap: 14px; }
+
+/* Kartat */
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; box-shadow: var(--shadow);
+}
+.request-card.is-urgent { border-left: 5px solid var(--red); }
+.request-head { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; margin-bottom: 12px; }
+.request-head h2 { margin: 0 0 2px; }
+.blood-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 52px; height: 44px; padding: 0 8px; border-radius: 10px;
+  background: var(--red); color: #fff; font-weight: 800; font-size: 18px;
+}
+.blood-badge.big { min-width: 76px; height: 64px; font-size: 26px; border-radius: 14px; }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.pill-urgent { background: var(--red-soft); color: var(--red); }
+.pill-ok { background: var(--green-soft); color: var(--green); }
+.pill-wait { background: var(--amber-soft); color: var(--amber); }
+.pill-off { background: var(--border); color: var(--muted); }
+
+.progress-wrap { margin: 8px 0 12px; }
+.progress-label { margin-bottom: 6px; }
+.progress { height: 10px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.progress span { display: block; height: 100%; background: var(--red); border-radius: 999px; transition: width .3s ease; }
+
+.link-arrow { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; text-decoration: none; }
+
+/* Butonat */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 10px 18px; border-radius: 12px; border: 2px solid var(--red);
+  background: var(--red); color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
+}
+.btn:hover { filter: brightness(1.05); }
+.btn:disabled, .btn[aria-disabled="true"] { background: var(--border); border-color: var(--border); color: var(--muted); cursor: not-allowed; }
+.btn-block { width: 100%; }
+.btn-ghost { background: transparent; color: var(--red); }
+.btn-green { background: var(--green); border-color: var(--green); }
+.btn-small { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+
+/* Formularët */
+form.stack label, .field label { font-weight: 600; display: block; margin-bottom: 4px; }
+input, select, textarea {
+  display: block; width: 100%; min-height: 48px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit;
+}
+textarea { min-height: 96px; resize: vertical; }
+.checkbox { display: flex; align-items: center; gap: 10px; font-weight: 600; min-height: 44px; }
+.checkbox input { width: 22px; min-height: 22px; height: 22px; accent-color: var(--red); }
+.hint { font-size: 14px; color: var(--muted); margin-top: 4px; }
+.grid-2 { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 560px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+.group-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.group-picker label { margin: 0; }
+.group-picker input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.group-picker span {
+  display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 10px;
+  border: 2px solid var(--border); background: var(--surface); font-weight: 800; cursor: pointer;
+}
+.group-picker input:checked + span { border-color: var(--red); background: var(--red); color: #fff; }
+.group-picker input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Mesazhet */
+.alert { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
+.alert-error { border-color: var(--red); background: var(--red-soft); color: var(--red-dark); }
+.alert-ok { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+.alert-info { border-color: var(--amber); background: var(--amber-soft); color: var(--text); }
+.empty { text-align: center; padding: 32px 16px; }
+.empty .big-emoji { font-size: 44px; }
+
+/* Detajet */
+.detail-head { display: flex; gap: 14px; align-items: center; margin: 8px 0 16px; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; }
+.contact { font-size: 18px; font-weight: 800; }
+.donor-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid var(--border); }
+.donor-row:first-child { border-top: 0; }
+
+/* Profili dhe distinktivat */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.stat strong { display: block; font-size: 28px; color: var(--red); line-height: 1.1; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.badge { text-align: center; padding: 14px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); }
+.badge .icon { font-size: 30px; display: block; }
+.badge.locked { opacity: .45; filter: grayscale(1); }
+.bars { display: grid; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: 44px 1fr 32px; gap: 8px; align-items: center; }
+.bar { height: 14px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--red); }
+
+/* Qendrat */
+.map-frame { width: 100%; height: 260px; border: 0; border-radius: var(--radius); }
+
+/* Njoftimet */
+.notif { display: block; text-decoration: none; color: inherit; }
+.notif.unread { border-left: 5px solid var(--red); }
+.notif time { font-size: 13px; color: var(--muted); }
+
+/* Navigimi poshtë */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.bottom-nav ul { list-style: none; margin: 0 auto; padding: 0; max-width: 760px; display: grid; grid-template-columns: repeat(5, 1fr); }
+.bottom-nav a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 60px; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 600;
+}
+.bottom-nav a[aria-current="page"] { color: var(--red); }
+.bottom-nav .nav-icon { font-size: 20px; line-height: 1; }
+
+.offline-banner { background: var(--amber-soft); color: var(--text); text-align: center; padding: 8px 16px; font-size: 14px; }
+.footer-note { text-align: center; font-size: 13px; color: var(--muted); margin-top: 28px; }
