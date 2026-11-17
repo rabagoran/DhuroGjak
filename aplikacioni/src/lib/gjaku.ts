@@ -93,7 +93,27 @@ const FQINJET: Record<string, readonly string[]> = {
   "Mitrovicë": ["Vushtrri", "Skënderaj"],
 };
 
-export const QYTETET: readonly string[] = Object.keys(FQINJET).sort((a, b) => a.localeCompare(b, "sq"));
+// Java 13: renditje e fiksuar. `localeCompare("sq")` jepte renditje të ndryshme në Node (server)
+// dhe në shfletues, duke shkaktuar gabim hidratimi React #418 te <select>.
+const ALFABETI = "a b c ç d dh e ë f g gj h i j k l ll m n nj o p q r rr s sh t th u v x xh y z zh".split(" ");
+function celesi(fjala: string): number[] {
+  const f = fjala.toLowerCase();
+  const out: number[] = [];
+  for (let i = 0; i < f.length; ) {
+    const dy = f.slice(i, i + 2);
+    const j = ALFABETI.indexOf(dy) >= 0 ? ALFABETI.indexOf(dy) : ALFABETI.indexOf(f[i]);
+    out.push(j >= 0 ? j : 100 + f.charCodeAt(i));
+    i += ALFABETI.indexOf(dy) >= 0 ? 2 : 1;
+  }
+  return out;
+}
+export function krahasoShqip(a: string, b: string): number {
+  const x = celesi(a), y = celesi(b);
+  for (let i = 0; i < Math.min(x.length, y.length); i++) if (x[i] !== y[i]) return x[i] - y[i];
+  return x.length - y.length;
+}
+
+export const QYTETET: readonly string[] = Object.keys(FQINJET).sort(krahasoShqip);
 
 export function eshteQytet(vlera: unknown): vlera is string {
   return typeof vlera === "string" && vlera in FQINJET;

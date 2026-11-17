@@ -2,6 +2,7 @@
 :root {
   --red: #b91c1c;
   --red-dark: #7f1d1d;
+  --red-solid: #b91c1c; /* sfond me tekst të bardhë: kontrast 6.5:1 */
   --red-soft: #fde8e8;
   --bg: #f7f7f8;
   --surface: #ffffff;
@@ -22,6 +23,7 @@
   :root {
     --red: #ef4444;
     --red-dark: #fca5a5;
+    --red-solid: #b91c1c;
     --red-soft: #3a1416;
     --bg: #111114;
     --surface: #1b1b20;
@@ -59,7 +61,7 @@ code { overflow-wrap: anywhere; }
 /* Shiriti i sipërm */
 .topbar {
   position: sticky; top: 0; z-index: 10;
-  background: var(--red); color: #fff;
+  background: var(--red-solid); color: #fff;
   padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top));
 }
 .topbar-inner { max-width: 760px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -89,7 +91,7 @@ main { max-width: 760px; margin: auto; padding: 20px 16px 32px; }
 .blood-badge {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 52px; height: 44px; padding: 0 8px; border-radius: 10px;
-  background: var(--red); color: #fff; font-weight: 800; font-size: 18px;
+  background: var(--red-solid); color: #fff; font-weight: 800; font-size: 18px;
 }
 .blood-badge.big { min-width: 76px; height: 64px; font-size: 26px; border-radius: 14px; }
 .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; }
@@ -108,8 +110,8 @@ main { max-width: 760px; margin: auto; padding: 20px 16px 32px; }
 /* Butonat */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 48px; padding: 10px 18px; border-radius: 12px; border: 2px solid var(--red);
-  background: var(--red); color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
+  min-height: 48px; padding: 10px 18px; border-radius: 12px; border: 2px solid var(--red-solid);
+  background: var(--red-solid); color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
 }
 .btn:hover { filter: brightness(1.05); }
 .btn:disabled, .btn[aria-disabled="true"] { background: var(--border); border-color: var(--border); color: var(--muted); cursor: not-allowed; }
@@ -138,7 +140,7 @@ textarea { min-height: 96px; resize: vertical; }
   display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 10px;
   border: 2px solid var(--border); background: var(--surface); font-weight: 800; cursor: pointer;
 }
-.group-picker input:checked + span { border-color: var(--red); background: var(--red); color: #fff; }
+.group-picker input:checked + span { border-color: var(--red-solid); background: var(--red-solid); color: #fff; }
 .group-picker input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 /* Mesazhet */
@@ -195,3 +197,8 @@ textarea { min-height: 96px; resize: vertical; }
 
 .offline-banner { background: var(--amber-soft); color: var(--text); text-align: center; padding: 8px 16px; font-size: 14px; }
 .footer-note { text-align: center; font-size: 13px; color: var(--muted); margin-top: 28px; }
+
+/* Java 13: skeleton i ngarkimit */
+.skeleton { border-radius: var(--radius); background: linear-gradient(90deg, var(--border) 0%, var(--surface) 50%, var(--border) 100%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } * { transition: none !important; } }
