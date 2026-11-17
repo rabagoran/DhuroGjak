@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
 import Navigimi from "@/components/Navigimi";
+import Pwa from "@/components/Pwa";
 
 export const metadata: Metadata = {
   title: { default: "DhuroGjak", template: "%s · DhuroGjak" },
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link href="/" className="brand"><span aria-hidden="true">🩸</span> DhuroGjak</Link>
           </div>
         </header>
+        <Pwa />
         {children}
         <Navigimi />
       </body>

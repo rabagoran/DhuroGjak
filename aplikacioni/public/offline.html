@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="sq"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#b91c1c">
+<title>DhuroGjak · Lista e ruajtur</title>
+<style>
+:root{--red:#b91c1c;--bg:#f7f7f8;--surface:#fff;--text:#1a1a1f;--muted:#5b5b66;--border:#e3e3e8;--amber:#fef6dc}
+@media (prefers-color-scheme:dark){:root{--red:#ef4444;--bg:#111114;--surface:#1b1b20;--text:#f2f2f5;--muted:#a6a6b2;--border:#2e2e36;--amber:#332a0b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,sans-serif}
+header{background:#b91c1c;color:#fff;padding:14px 16px;font-weight:800;font-size:20px}
+main{max-width:760px;margin:auto;padding:20px 16px 40px}h1{font-size:clamp(24px,6vw,32px);margin:0 0 8px}
+#source{padding:12px 14px;border-radius:12px;background:var(--amber);margin:12px 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin:12px 0;display:flex;gap:12px;align-items:center}
+.badge{min-width:52px;height:44px;border-radius:10px;background:var(--red);color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center}
+.card h2{font-size:18px;margin:0 0 2px}.muted{color:var(--muted)}
+button{min-height:48px;padding:10px 18px;border-radius:12px;border:2px solid var(--red);background:var(--red);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+button:disabled{background:var(--border);border-color:var(--border);color:var(--muted);cursor:not-allowed}
+a{color:var(--red)}:focus-visible{outline:3px solid #1d4ed8;outline-offset:3px}
+</style></head><body>
+<header>🩸 DhuroGjak</header>
+<main>
+<h1>Kërkesat, edhe pa internet</h1>
+<p id="source" role="status" aria-live="polite">Po lexojmë listën…</p>
+<p class="muted">Ruajtur për herë të fundit: <time id="saved">—</time></p>
+<button id="refresh" type="button">Rifresko listën</button>
+<div id="list"></div>
+<p><button type="button" disabled>Do të shkoj · kërkon internet</button></p>
+<p class="muted">Kjo pamje shërben vetëm për lexim. Dozat dhe afatet mund të kenë ndryshuar; asnjë pjesëmarrje nuk konfirmohet pa internet.</p>
+<a href="/">Kthehu te aplikacioni</a>
+</main>
+<script>
+const source = document.querySelector("#source"), list = document.querySelector("#list"), refresh = document.querySelector("#refresh");
+function afati(iso){ try { return new Date(iso).toLocaleString("sq-AL",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}); } catch { return iso; } }
+async function load() {
+  refresh.disabled = true;
+  source.textContent = "Po kërkojmë listën…";
+  try {
+    const response = await fetch("/api/kerkesat", { cache: "no-store" });
+    const data = await response.json();
+    if (!response.ok || !Array.isArray(data.kerkesat)) throw new Error("no_snapshot");
+    list.replaceChildren();
+    if (data.kerkesat.length === 0) { const p = document.createElement("p"); p.textContent = "Nuk kishte kërkesa aktive në këtë kopje."; list.append(p); }
+    for (const k of data.kerkesat) {
+      const card = document.createElement("article"); card.className = "card";
+      const badge = document.createElement("span"); badge.className = "badge"; badge.textContent = k.grupi;
+      const box = document.createElement("div");
+      const h = document.createElement("h2"); h.textContent = (k.urgjente ? "URGJENTE · " : "") + k.spitali;
+      const p = document.createElement("p"); p.className = "muted";
+      p.textContent = k.qyteti + " · " + k.pranuar + " nga " + k.dozat + " dhurues · deri " + afati(k.afati);
+      box.append(h, p); card.append(badge, box); list.append(card);
+    }
+    const saved = response.headers.get("x-dhurogjak-saved-at");
+    document.querySelector("#saved").textContent = saved ? new Date(saved).toLocaleString("sq-AL") : "Lexuar drejtpërdrejt; kopja ende nuk u ruajt.";
+    source.textContent = response.headers.get("x-dhurogjak-source") === "cache"
+      ? "Lista e fundit e ruajtur · Mund të jetë e vjetër. Serveri nuk u arrit."
+      : "Lista erdhi nga serveri.";
+  } catch {
+    source.textContent = list.children.length
+      ? "Lidhja dështoi. Lista në ekran është e mëparshme."
+      : "Ende nuk ka listë të ruajtur. Hape aplikacionin me internet dhe provo përsëri.";
+  } finally { refresh.disabled = false; }
+}
+refresh.addEventListener("click", load);
+window.addEventListener("offline", () => { source.textContent = "Lidhja u ndërpre. Lista mund të jetë e vjetër."; });
+window.addEventListener("online", () => { source.textContent = "Interneti u kthye — po rifreskojmë…"; load(); });
+load();
+</script></body></html>
