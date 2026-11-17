@@ -1,10 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { gjejKerkesen } from "@/lib/kerkesat";
+import { gjejKerkesen, type Kerkese } from "@/lib/kerkesat";
+import GabimDB from "@/components/GabimDB";
+
+export const dynamic = "force-dynamic";
 
 export default async function Pergjigja({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const kerkesa = gjejKerkesen(id);
+  let kerkesa: Kerkese | undefined;
+  try {
+    kerkesa = await gjejKerkesen(id);
+  } catch {
+    return <main><GabimDB provo={`/kerkesa/${id}/pergjigja`} /></main>;
+  }
   if (!kerkesa) notFound();
 
   return (

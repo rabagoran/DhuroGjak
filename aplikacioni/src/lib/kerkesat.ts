@@ -1,3 +1,5 @@
+import "server-only";
+import { getSql } from "./db";
 import type { GrupGjaku } from "./gjaku";
 
 export type Statusi = "aktive" | "perfunduar" | "anuluar";
@@ -15,20 +17,32 @@ export type Kerkese = {
   pranuar: number;
 };
 
-// Java 3: të dhëna fiktive, statike. Në Java 4 zëvendësohen nga Neon.
-const sot = new Date();
-const ore = (h: number) => new Date(sot.getTime() + h * 60 * 60 * 1000).toISOString();
-
-const KERKESAT: Kerkese[] = [
-  { id: "1", grupi: "O-", spitali: "QKUK Prishtinë", qyteti: "Prishtinë", dozat: 2, afati: ore(5), pershkrimi: "Pacient në kirurgji (shembull fiktiv).", urgjente: true, statusi: "aktive", pranuar: 1 },
-  { id: "2", grupi: "A+", spitali: "Spitali Rajonal Pejë", qyteti: "Pejë", dozat: 3, afati: ore(26), pershkrimi: "Operacion i planifikuar (shembull fiktiv).", urgjente: false, statusi: "aktive", pranuar: 0 },
-  { id: "3", grupi: "AB-", spitali: "Spitali Rajonal Prizren", qyteti: "Prizren", dozat: 1, afati: ore(48), pershkrimi: "Lindje me komplikime (shembull fiktiv).", urgjente: false, statusi: "aktive", pranuar: 1 },
-];
-
-export function lexoKerkesat(): Kerkese[] {
-  return KERKESAT;
+// Java 4: të dhënat vijnë nga Neon. `pranuar` do të llogaritet nga pergjigjet në Java 7.
+export async function lexoKerkesat(): Promise<Kerkese[]> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id::text AS id, grupi, spitali, qyteti, dozat, afati, pershkrimi, urgjente, statusi, 0 AS pranuar
+    FROM kerkesat
+    WHERE statusi = 'aktive' AND afati > NOW()
+    ORDER BY urgjente DESC, afati ASC
+  `;
+  return rows.map(normalizo);
 }
 
-export function gjejKerkesen(id: string): Kerkese | undefined {
-  return KERKESAT.find((k) => k.id === id);
+export async function gjejKerkesen(id: string): Promise<Kerkese | undefined> {
+  if (!/^\d{1,12}$/.test(id)) return undefined;
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id::text AS id, grupi, spitali, qyteti, dozat, afati, pershkrimi, urgjente, statusi, 0 AS pranuar
+    FROM kerkesat WHERE id = ${id}
+  `;
+  return rows[0] ? normalizo(rows[0]) : undefined;
+}
+
+function normalizo(r: Record<string, unknown>): Kerkese {
+  return {
+    ...(r as Kerkese),
+    afati: new Date(r.afati as string).toISOString(),
+    pranuar: Number(r.pranuar ?? 0),
+  };
 }

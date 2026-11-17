@@ -1,15 +1,23 @@
 import KartaKerkeses from "@/components/KartaKerkeses";
-import { lexoKerkesat } from "@/lib/kerkesat";
+import GabimDB from "@/components/GabimDB";
+import { lexoKerkesat, type Kerkese } from "@/lib/kerkesat";
 
-export default function Home() {
-  const kerkesat = lexoKerkesat();
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  let kerkesat: Kerkese[];
+  try {
+    kerkesat = await lexoKerkesat();
+  } catch {
+    return <main><h1>Kërkesat aktive</h1><GabimDB /></main>;
+  }
 
   return (
     <main>
       <div className="page-head">
         <div>
           <h1>Kërkesat aktive</h1>
-          <p className="muted">Të dhëna fiktive për ushtrime · Java 3</p>
+          <p className="muted">Burimi: Neon · të dhëna fiktive për ushtrime</p>
         </div>
       </div>
       {kerkesat.length === 0 ? (
