@@ -48,6 +48,22 @@ export async function kerkesatEMia(perdoruesId: string): Promise<Kerkese[]> {
   return rows.map(normalizo);
 }
 
+/** Java 12 — kufizimi kundër spam-it: maks. 3 kërkesa aktive dhe 5 në 24 orë për përdorues. */
+export const KUFIRI_AKTIVE = 3;
+export const KUFIRI_DITOR = 5;
+
+export async function arsyejaEKufizimit(perdoruesId: string): Promise<string | null> {
+  const sql = getSql();
+  const [r] = await sql`
+    SELECT
+      COUNT(*) FILTER (WHERE statusi = 'aktive' AND afati > NOW())::int AS aktive,
+      COUNT(*) FILTER (WHERE krijuar_ne > NOW() - INTERVAL '24 hours')::int AS ditore
+    FROM kerkesat WHERE krijuar_nga = ${perdoruesId}`;
+  if (Number(r.aktive) >= KUFIRI_AKTIVE) return `Ke ${KUFIRI_AKTIVE} kërkesa aktive. Mbyll njërën para se të postosh tjetër.`;
+  if (Number(r.ditore) >= KUFIRI_DITOR) return `Ke arritur kufirin prej ${KUFIRI_DITOR} kërkesash në 24 orë. Provo më vonë.`;
+  return null;
+}
+
 export async function krijoKerkesen(p: Perdorues, k: KerkesaInput): Promise<string> {
   const sql = getSql();
   const rows = await sql`

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { perdoruesiIm } from "@/lib/lejet";
 import { validoKerkesen } from "@/lib/validimi";
-import { krijoKerkesen, ndryshoStatusin, gjejKerkesen } from "@/lib/kerkesat";
+import { krijoKerkesen, ndryshoStatusin, gjejKerkesen, arsyejaEKufizimit } from "@/lib/kerkesat";
 import { pergjigjuNeKerkese, anuloPergjigjen, konfirmoDhurimin, kontaktiPerDhuruesin } from "@/lib/pergjigjet";
 import type { VendimPergjigjeje } from "@/lib/rregullat";
 import { njoftoDhuruesitEPerputhshem } from "@/lib/njoftimet";
@@ -20,6 +20,8 @@ export async function postoKerkesen(_: GjendjaKerkeses, formData: FormData): Pro
     if (!p) return { ok: false, mesazh: "Hyr në llogari para se të postosh kërkesë.", vlerat: vlerat(formData) };
     const r = validoKerkesen(formData);
     if (!r.ok) return { ok: false, mesazh: "Kontrollo fushat e shënuara.", gabimet: r.gabimet, vlerat: vlerat(formData) };
+    const kufizimi = p.roli === "admin" ? null : await arsyejaEKufizimit(p.id);
+    if (kufizimi) return { ok: false, mesazh: kufizimi, vlerat: vlerat(formData) };
     id = await krijoKerkesen(p, r.vlera);
     // Java 11: njofto dhuruesit e përputhshëm. Nëse njoftimi dështon, kërkesa mbetet e postuar.
     try {

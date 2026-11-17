@@ -36,15 +36,21 @@ export async function pergjigjuNeKerkese(p: Perdorues, kerkesaId: string): Promi
   if (vendimi !== "ok") return vendimi;
 
   const sql = getSql();
-  const rows = await sql`
-    INSERT INTO pergjigjet (kerkesa_id, dhuruesi_id)
-    SELECT k.id, ${p.id} FROM kerkesat k
-    WHERE k.id = ${kerkesaId} AND k.statusi = 'aktive' AND k.afati > NOW()
-      AND k.krijuar_nga IS DISTINCT FROM ${p.id}
-      AND (SELECT COUNT(*) FROM pergjigjet x WHERE x.kerkesa_id = k.id AND x.statusi IN ('do_shkoj','dhuroi')) < k.dozat
-    ON CONFLICT (kerkesa_id, dhuruesi_id)
-      DO UPDATE SET statusi = 'do_shkoj', perditesuar_ne = NOW() WHERE pergjigjet.statusi = 'anuluar'
-    RETURNING id`;
+  // Java 12 — parandalimi i mbirezervimit: dy dhurues që klikojnë në të njëjtën milisekondë
+  // mund të shihnin të dy “1 vend i lirë”. Bllokimi i transaksionit (advisory lock) për këtë
+  // kërkesë i rradhit: i dyti e sheh numrin e përditësuar dhe merr “plot”.
+  const [, rows] = await sql.transaction([
+    sql`SELECT pg_advisory_xact_lock(${Number(kerkesaId)})`,
+    sql`
+      INSERT INTO pergjigjet (kerkesa_id, dhuruesi_id)
+      SELECT k.id, ${p.id} FROM kerkesat k
+      WHERE k.id = ${kerkesaId} AND k.statusi = 'aktive' AND k.afati > NOW()
+        AND k.krijuar_nga IS DISTINCT FROM ${p.id}
+        AND (SELECT COUNT(*) FROM pergjigjet x WHERE x.kerkesa_id = k.id AND x.statusi IN ('do_shkoj','dhuroi')) < k.dozat
+      ON CONFLICT (kerkesa_id, dhuruesi_id)
+        DO UPDATE SET statusi = 'do_shkoj', perditesuar_ne = NOW() WHERE pergjigjet.statusi = 'anuluar'
+      RETURNING id`,
+  ]);
   if (rows.length !== 1) return "plot";
   // Java 11: kërkuesi njoftohet “1 nga 2 dhurues u gjet ✅”.
   if (kerkesa.krijuar_nga) {

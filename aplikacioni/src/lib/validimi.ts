@@ -5,7 +5,7 @@ export type Rezultat<T> = { ok: true; vlera: T } | { ok: false; gabimet: Record<
 
 type Burim = { get(emri: string): unknown };
 
-const tekst = (b: Burim, k: string) => String(b.get(k) ?? "").trim();
+const tekst = (b: Burim, k: string) => pastro(String(b.get(k) ?? "")).trim();
 
 export function normalizoTelefonin(v: string): string {
   let t = v.replace(/[\s\-().]/g, "");
@@ -15,6 +15,20 @@ export function normalizoTelefonin(v: string): string {
 
 export function telefonValid(v: string): boolean {
   return /^\+?[0-9]{8,15}$/.test(v);
+}
+
+/** Java 12: gjaku nuk shitet (OBSH). Refuzo tekstet që ofrojnë/kërkojnë para. */
+export function kaOferteParash(t: string): boolean {
+  return /(€|\$|\b\d+\s*(euro|eur|lek[eë]?|den[aá]r)\b|\b(pages[eë]|paguaj|paguhet|paguajm[eë]|shp[eë]rblim\w*|honorar|cmim\w*|çmim\w*|shes|blej)\b)/i.test(t);
+}
+
+export function kaLidhje(t: string): boolean {
+  return /(https?:\/\/|www\.)/i.test(t);
+}
+
+/** Heq karakteret e kontrollit (p.sh. \u0000) që mund të prishin shfaqjen ose log-et. */
+function pastro(t: string): string {
+  return t.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
 }
 
 export type ProfiliInput = {
@@ -88,6 +102,8 @@ export function validoKerkesen(b: Burim, tani: Date = new Date()): Rezultat<Kerk
   if (!eshteQytet(qyteti)) gabimet.qyteti = "Zgjidh qytetin nga lista.";
   if (!Number.isInteger(dozat) || dozat < 1 || dozat > 10) gabimet.dozat = "Dozat duhet të jenë nga 1 deri në 10.";
   if (pershkrimi.length > 500) gabimet.pershkrimi = "Përshkrimi mund të ketë deri në 500 shkronja.";
+  else if (kaOferteParash(pershkrimi) || kaOferteParash(spitali)) gabimet.pershkrimi = "Dhurimi i gjakut është falas. Kërkesat me pagesë ose shpërblim në para nuk lejohen.";
+  else if (kaLidhje(pershkrimi)) gabimet.pershkrimi = "Lidhjet (URL) nuk lejohen në përshkrim.";
   if (!telefonValid(telefoni)) gabimet.telefoni_kontaktit = "Shkruaj telefonin e kontaktit (shfaqet vetëm te dhuruesit që pranojnë).";
 
   const afati = new Date(afatiRaw);
