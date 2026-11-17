@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { perdoruesiIm } from "@/lib/lejet";
 import { validoKerkesen } from "@/lib/validimi";
-import { krijoKerkesen, ndryshoStatusin } from "@/lib/kerkesat";
-import { pergjigjuNeKerkese, anuloPergjigjen, konfirmoDhurimin } from "@/lib/pergjigjet";
+import { krijoKerkesen, ndryshoStatusin, gjejKerkesen } from "@/lib/kerkesat";
+import { pergjigjuNeKerkese, anuloPergjigjen, konfirmoDhurimin, kontaktiPerDhuruesin } from "@/lib/pergjigjet";
+import type { VendimPergjigjeje } from "@/lib/rregullat";
 
 export type GjendjaKerkeses = { ok: boolean; mesazh: string; gabimet?: Record<string, string>; vlerat?: Record<string, string> };
 
@@ -86,4 +87,26 @@ export async function konfirmoDhurimInAction(formData: FormData) {
   }
   revalidatePath("/");
   redirect(`/kerkesa/${encodeURIComponent(id)}?m=${m}`);
+}
+
+// ---- Java 9: “Do të shkoj” optimist (kthen rezultat, jo redirect) ----
+
+export type RezultatiPergjigjes =
+  | { ok: true; pranuar: number; kontakti: { emri: string; telefoni: string } | null }
+  | { ok: false; vendimi: VendimPergjigjeje | "databaza" };
+
+export async function doTeShkojOptimist(kerkesaId: string): Promise<RezultatiPergjigjes> {
+  try {
+    const p = await perdoruesiIm();
+    if (!p) return { ok: false, vendimi: "hyr" };
+    // Simulim gabimi për provën e rikthimit (vetëm lokalisht; mos e aktivizo në Vercel).
+    if (process.env.SIMULO_GABIM_PERGJIGJE === "1") return { ok: false, vendimi: "databaza" };
+    const vendimi = await pergjigjuNeKerkese(p, kerkesaId);
+    if (vendimi !== "ok") return { ok: false, vendimi };
+    const [kerkesa, kontakti] = await Promise.all([gjejKerkesen(kerkesaId), kontaktiPerDhuruesin(p, kerkesaId)]);
+    revalidatePath("/");
+    return { ok: true, pranuar: kerkesa?.pranuar ?? 0, kontakti };
+  } catch {
+    return { ok: false, vendimi: "databaza" };
+  }
 }

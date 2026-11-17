@@ -8,7 +8,8 @@ import { grupetDhuruese } from "@/lib/gjaku";
 import { dozat, formatoAfatin, kaSkaduar } from "@/lib/format";
 import Progresi from "@/components/Progresi";
 import GabimDB from "@/components/GabimDB";
-import { mbyllKerkesen, doTeShkoj, anuloPjesemarrjen, konfirmoDhurimInAction } from "../actions";
+import DoTeShkoj from "@/components/DoTeShkoj";
+import { mbyllKerkesen, anuloPjesemarrjen, konfirmoDhurimInAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,8 @@ export default async function Detajet({ params, searchParams }: {
   const kaPranuar = ime === "do_shkoj" || ime === "dhuroi";
   const vendimi = vendosPergjigjen(p, kerkesa, { kaPranuar });
   const mesazh = m ? MESAZHET[m] : undefined;
+  // Java 9: kur butoni optimist shfaqet, ai vizaton edhe progresin (që të rritet menjëherë).
+  const butoniOptimist = !pronar && aktive && !kaPranuar && (vendimi === "ok" || vendimi === "hyr");
 
   return (
     <main>
@@ -72,7 +75,7 @@ export default async function Detajet({ params, searchParams }: {
         {!aktive && <p><span className="pill pill-off">{kerkesa.statusi === "perfunduar" ? "Përfunduar ✅" : kerkesa.statusi === "anuluar" ? "Anuluar" : "Afati ka kaluar"}</span></p>}
         {kerkesa.urgjente && aktive && <p><span className="pill pill-urgent">Urgjente</span></p>}
         {kerkesa.pershkrimi && <p>{kerkesa.pershkrimi}</p>}
-        <Progresi pranuar={kerkesa.pranuar} dozat={kerkesa.dozat} />
+        {!butoniOptimist && <Progresi pranuar={kerkesa.pranuar} dozat={kerkesa.dozat} />}
         <p className="muted small">Mund të dhurojnë grupet: <strong>{grupetDhuruese(kerkesa.grupi).join(", ")}</strong></p>
 
         {/* Pamja e dhuruesit */}
@@ -84,11 +87,7 @@ export default async function Detajet({ params, searchParams }: {
         )}
         {!pronar && aktive && !kaPranuar && (
           vendimi === "ok" || vendimi === "hyr" ? (
-            <form action={doTeShkoj}>
-              <input type="hidden" name="id" value={kerkesa.id} />
-              <button className="btn btn-block" type="submit">❤ Do të shkoj</button>
-              <p className="hint">Telefoni i kërkuesit shfaqet vetëm pasi të pranosh.</p>
-            </form>
+            <DoTeShkoj kerkesaId={kerkesa.id} pranuar={kerkesa.pranuar} dozat={kerkesa.dozat} kaHyre={p !== null} />
           ) : (
             <>
               <button className="btn btn-block" type="button" disabled>❤ Do të shkoj</button>
