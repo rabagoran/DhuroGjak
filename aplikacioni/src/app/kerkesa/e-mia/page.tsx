@@ -10,7 +10,9 @@ export const metadata: Metadata = { title: "Kërkesat e mia" };
 export const dynamic = "force-dynamic";
 
 const STATUSI: Record<string, { teksti: string; klasa: string }> = {
-  aktive: { teksti: "Aktive", klasa: "pill-wait" },
+  ne_verifikim: { teksti: "Në verifikim", klasa: "pill-wait" },
+  aktive: { teksti: "Aktive", klasa: "pill-ok" },
+  refuzuar: { teksti: "Refuzuar", klasa: "pill-urgent" },
   perfunduar: { teksti: "Përfunduar", klasa: "pill-ok" },
   anuluar: { teksti: "Anuluar", klasa: "pill-off" },
 };

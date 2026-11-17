@@ -40,7 +40,7 @@
 
 ## Prova 3 — Veprimi pa leje refuzohet
 
-**Hapat:** Hap kërkesën tënde aktive, në DevTools ndrysho `<input type="hidden" name="id">` në `1` (kërkesa e `demo:kerkuesi`) dhe shtyp “Shëno Përfunduar”.
+**Hapat:** Hap kërkesën tënde aktive, në DevTools ndrysho `<input type="hidden" name="id">` në ID-në e një kërkese të një përdoruesi tjetër dhe shtyp “Shëno Përfunduar”.
 
 **Rezultati real:** _(plotëso: duhet “Nuk ke leje për këtë kërkesë. Asgjë nuk ndryshoi.” dhe kërkesa 1 mbetet `aktive` në Neon.)_
 

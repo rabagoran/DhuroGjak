@@ -1,7 +1,7 @@
 import "server-only";
 import { getSql } from "./db";
 import type { Perdorues } from "./lejet";
-import { gjejKerkesen } from "./kerkesat";
+import { gjejKerkesen, spitaliIStafit } from "./kerkesat";
 import { vendosPergjigjen, type VendimPergjigjeje } from "./rregullat";
 import { njofto } from "./njoftimet";
 import { distinktivat } from "./gjaku";
@@ -44,7 +44,7 @@ export async function pergjigjuNeKerkese(p: Perdorues, kerkesaId: string): Promi
     sql`
       INSERT INTO pergjigjet (kerkesa_id, dhuruesi_id)
       SELECT k.id, ${p.id} FROM kerkesat k
-      WHERE k.id = ${kerkesaId} AND k.statusi = 'aktive' AND k.afati > NOW()
+      WHERE k.id = ${kerkesaId} AND k.statusi = 'aktive' AND NOT k.pezulluar AND k.afati > NOW()
         AND k.krijuar_nga IS DISTINCT FROM ${p.id}
         AND (SELECT COUNT(*) FROM pergjigjet x WHERE x.kerkesa_id = k.id AND x.statusi IN ('do_shkoj','dhuroi')) < k.dozat
       ON CONFLICT (kerkesa_id, dhuruesi_id)
@@ -76,7 +76,7 @@ export async function anuloPergjigjen(p: Perdorues, kerkesaId: string): Promise<
   return true;
 }
 
-/** Dhuruesit e kërkesës — vetëm për pronarin. Telefoni zbulohet sepse dhuruesi ka pranuar. */
+/** Dhuruesit e kërkesës — vetëm për pronarin dhe stafin e spitalit. Telefoni zbulohet sepse dhuruesi ka pranuar. */
 export async function pergjigjetPerPronar(p: Perdorues, kerkesaId: string): Promise<PergjigjePerPronar[]> {
   const sql = getSql();
   const rows = await sql`
@@ -85,7 +85,7 @@ export async function pergjigjetPerPronar(p: Perdorues, kerkesaId: string): Prom
     JOIN perdoruesit u ON u.id = pg.dhuruesi_id
     JOIN kerkesat k ON k.id = pg.kerkesa_id
     WHERE pg.kerkesa_id = ${kerkesaId} AND pg.statusi IN ('do_shkoj','dhuroi')
-      AND (k.krijuar_nga = ${p.id} OR ${p.roli === "admin"})
+      AND (k.krijuar_nga = ${p.id} OR ${p.roli === "admin"} OR k.spitali_id = ${spitaliIStafit(p)})
     ORDER BY pg.krijuar_ne`;
   return rows as PergjigjePerPronar[];
 }
@@ -103,7 +103,7 @@ export async function kontaktiPerDhuruesin(p: Perdorues, kerkesaId: string): Pro
 }
 
 /**
- * Pronari konfirmon që dhuruesi dhuroi. Në një deklaratë të vetme (atomike):
+ * Pronari ose stafi i spitalit konfirmon që dhuruesi dhuroi. Në një deklaratë të vetme (atomike):
  * - përgjigja → 'dhuroi';
  * - dhuruesi: dhurimi_fundit = sot, dhurime + 1 (bllokohet automatikisht 90/120 ditë);
  * - kur dhurimet mbulojnë dozat, kërkesa → 'perfunduar'.
@@ -116,7 +116,7 @@ export async function konfirmoDhurimin(p: Perdorues, kerkesaId: string, pergjigj
       UPDATE pergjigjet pg SET statusi = 'dhuroi', perditesuar_ne = NOW()
       FROM kerkesat k
       WHERE pg.id = ${pergjigjeId} AND pg.kerkesa_id = ${kerkesaId} AND k.id = pg.kerkesa_id
-        AND pg.statusi = 'do_shkoj' AND (k.krijuar_nga = ${p.id} OR ${p.roli === "admin"})
+        AND pg.statusi = 'do_shkoj' AND (k.krijuar_nga = ${p.id} OR ${p.roli === "admin"} OR k.spitali_id = ${spitaliIStafit(p)})
       RETURNING pg.dhuruesi_id, k.dozat
     ), d AS (
       UPDATE perdoruesit SET dhurimi_fundit = CURRENT_DATE, dhurime = dhurime + 1

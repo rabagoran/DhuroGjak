@@ -202,3 +202,9 @@ textarea { min-height: 96px; resize: vertical; }
 .skeleton { border-radius: var(--radius); background: linear-gradient(90deg, var(--border) 0%, var(--surface) 50%, var(--border) 100%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } * { transition: none !important; } }
+
+/* Verifikimi nga spitali */
+.verified { color: var(--green); font-weight: 700; margin: 0 0 8px; }
+.refuzo { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.refuzo select { flex: 1 1 200px; width: auto; }
+.report summary { cursor: pointer; color: var(--muted); font-size: 14px; }

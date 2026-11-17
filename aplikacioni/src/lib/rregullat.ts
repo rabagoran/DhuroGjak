@@ -29,6 +29,7 @@ export type KerkesePerVendim = {
   dozat: number;
   pranuar: number;
   krijuar_nga: string | null;
+  pezulluar?: boolean;
 };
 
 export function vendosPergjigjen(
@@ -39,7 +40,7 @@ export function vendosPergjigjen(
   const tani = opsione.tani ?? new Date();
   if (!dhuruesi) return "hyr";
   if (kerkesa.krijuar_nga === dhuruesi.id) return "pronar";
-  if (kerkesa.statusi !== "aktive" || new Date(kerkesa.afati).getTime() <= tani.getTime()) return "mbyllur";
+  if (kerkesa.statusi !== "aktive" || kerkesa.pezulluar || new Date(kerkesa.afati).getTime() <= tani.getTime()) return "mbyllur";
   if (opsione.kaPranuar) return "ekziston";
   if (!dhuruesi.grupi || !dhuruesi.gjinia || !dhuruesi.telefoni || !dhuruesi.qyteti) return "profili";
   if (kerkesa.pranuar >= kerkesa.dozat) return "plot";

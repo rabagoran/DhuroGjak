@@ -46,8 +46,8 @@ export default async function StatistikatFaqe() {
       <section className="card stack">
         <h2>Si mbahet DhuroGjak?</h2>
         <p>Dhurimi i gjakut është <strong>vullnetar dhe falas</strong>, siç e rekomandon Organizata Botërore e Shëndetësisë. Në aplikacion nuk ka pagesa mes përdoruesve.</p>
-        <p className="muted">Projekti mbahet nga sponsorë (“Mbështetës”), partneritete me spitalet dhe organizatat humanitare, grante për shëndetësi digjitale dhe shpërblime jo-monetare nga partnerët për dhuruesit.</p>
-        <Link href="/rreth">Më shumë për projektin →</Link>
+        <p className="muted">DhuroGjak është jofitimprurës dhe punon me spitalet, që verifikojnë çdo kërkesë para se të njoftohen dhuruesit.</p>
+        <Link href="/rreth">Më shumë për DhuroGjak →</Link>
       </section>
     </main>
   );

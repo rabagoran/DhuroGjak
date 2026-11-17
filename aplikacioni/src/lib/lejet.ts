@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./auth";
 import { getSql } from "./db";
 import type { GrupGjaku, Gjinia } from "./gjaku";
+import type { Roli } from "./verifikimi";
 
 export type Perdorues = {
   id: string;
@@ -14,7 +15,9 @@ export type Perdorues = {
   dhurimi_fundit: string | null;
   njoftimet: boolean;
   dhurime: number;
-  roli: "perdorues" | "admin";
+  roli: Roli;
+  /** Vetëm për rolin "spital": spitali ku punon stafi. */
+  spitali_id: string | null;
 };
 
 const ID_VALIDE = /^(github|google):[A-Za-z0-9_-]{1,64}$/;
@@ -29,7 +32,7 @@ export async function perdoruesiIm(): Promise<Perdorues | null> {
   await sql`INSERT INTO perdoruesit (id, emri) VALUES (${id}, ${emri}) ON CONFLICT (id) DO NOTHING`;
   const rows = await sql`
     SELECT id, emri, telefoni, qyteti, gjinia, grupi, to_char(dhurimi_fundit, 'YYYY-MM-DD') AS dhurimi_fundit,
-           njoftimet, dhurime, roli
+           njoftimet, dhurime, roli, spitali_id
     FROM perdoruesit WHERE id = ${id}`;
   return (rows[0] as Perdorues | undefined) ?? null;
 }

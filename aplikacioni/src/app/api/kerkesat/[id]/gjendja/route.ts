@@ -1,4 +1,5 @@
 import { gjejKerkesen } from "@/lib/kerkesat";
+import { mundTeShikoje } from "@/lib/verifikimi";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +8,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const { id } = await params;
   try {
     const k = await gjejKerkesen(id);
-    if (!k) return Response.json({ error: "not_found" }, { status: 404 });
+    // Kërkesat në verifikim, të refuzuara ose të pezulluara nuk janë publike.
+    if (!k || !mundTeShikoje(null, k)) return Response.json({ error: "not_found" }, { status: 404 });
     return Response.json(
       { id: k.id, pranuar: k.pranuar, dozat: k.dozat, statusi: k.statusi },
       { headers: { "Cache-Control": "no-store" } },

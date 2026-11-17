@@ -1,36 +1,31 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Rreth projektit" };
+export const metadata: Metadata = { title: "Rreth DhuroGjak" };
 
 export default function Rreth() {
   return (
     <main className="stack">
       <div>
         <h1>Rreth DhuroGjak</h1>
-        <p className="muted">Projekt social me ndikim · Programimi për Pajisje Mobile, AAB 2026/2027</p>
+        <p className="muted">Lidh pacientët që kanë nevojë urgjente për gjak me dhuruesit vullnetarë afër tyre.</p>
       </div>
       <section className="card stack">
         <h2>❤ Gjaku nuk shitet</h2>
         <p>Në Kosovë, në Shqipëri dhe në pjesën më të madhe të botës, gjaku dhurohet <strong>vullnetarisht dhe pa pagesë</strong>, siç e rekomandon Organizata Botërore e Shëndetësisë. Shitja e gjakut nuk lejohet dhe nuk është etike. DhuroGjak nuk ka asnjë pagesë mes përdoruesve. Raporto çdo kërkesë që ofron ose kërkon para.</p>
       </section>
       <section className="card stack">
-        <h2>Si mbahet projekti</h2>
+        <h2>🏥 Çdo kërkesë verifikohet nga spitali</h2>
         <ul>
-          <li><strong>Sponsorë</strong> — kompani që shfaqen si “Mbështetës” në aplikacion.</li>
-          <li><strong>Partneritete</strong> — Kryqi i Kuq, spitalet, komunat, Qendra Kombëtare e Transfuzionit të Gjakut.</li>
-          <li><strong>Grante</strong> — OJQ, BE dhe programe për shëndetësi digjitale.</li>
-          <li><strong>Shpërblime jo-monetare</strong> për dhuruesit nga partnerët: p.sh. zbritje në palestër ose kafe falas pas dhurimit.</li>
+          <li>Kërkesat që poston stafi i spitalit publikohen menjëherë.</li>
+          <li>Kërkesat e familjarëve shkojnë fillimisht te stafi i spitalit të zgjedhur, që i konfirmon me telefon.</li>
+          <li>Asnjë dhurues nuk njoftohet për kërkesë që spitali nuk e ka konfirmuar.</li>
+          <li>Çdo kërkesë mund të raportohet; pas disa raportimeve fshihet derisa ta shqyrtojë spitali.</li>
         </ul>
       </section>
       <section className="card stack">
-        <h2>🤝 Mbështetësit</h2>
-        <p className="muted">Hapësirë për partnerët e ardhshëm. Dëshiron ta mbështesësh projektin? Na shkruaj.</p>
-        <div className="badges">
-          <div className="badge locked"><span className="icon">🏥</span>Partneri juaj</div>
-          <div className="badge locked"><span className="icon">☕</span>Partneri juaj</div>
-          <div className="badge locked"><span className="icon">🏋️</span>Partneri juaj</div>
-        </div>
+        <h2>🤝 Bashkëpunimi</h2>
+        <p>DhuroGjak është jofitimprurës. Spitalet dhe qendrat e transfuzionit që duan qasje në panelin e verifikimit mund të kërkojnë llogari stafi nga administratori.</p>
       </section>
       <section className="card stack">
         <h2>🔒 Privatësia</h2>

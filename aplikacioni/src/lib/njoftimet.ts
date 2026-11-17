@@ -4,7 +4,9 @@ import { dergoPush } from "./push";
 import { grupetDhuruese, qytetetAfer, DITET_PRITJES, type GrupGjaku } from "./gjaku";
 import { dozat, formatoAfatin } from "./format";
 
-export type Lloji = "kerkese_e_re" | "dhurues_vjen" | "dhuruesi_anuloi" | "dhurim_konfirmuar" | "kerkesa_perfundoi" | "kujtues";
+export type Lloji =
+  | "kerkese_e_re" | "dhurues_vjen" | "dhuruesi_anuloi" | "dhurim_konfirmuar" | "kerkesa_perfundoi" | "kujtues"
+  | "verifikim_i_ri" | "kerkesa_u_verifikua" | "kerkesa_u_refuzua" | "kerkesa_u_raportua";
 
 export type Njoftim = {
   id: string;
@@ -57,6 +59,19 @@ export async function njofto(perdoruesId: string, kerkesaId: string | null, lloj
   await sql`INSERT INTO njoftimet (perdoruesi_id, kerkesa_id, lloji, teksti) VALUES (${perdoruesId}, ${kerkesaId}, ${lloji}, ${teksti})
             ON CONFLICT DO NOTHING`;
   await dergoPush([perdoruesId], { title: titulli, body: teksti, url: kerkesaId ? `/kerkesa/${kerkesaId}` : "/profili", tag: kerkesaId ? `kerkesa-${kerkesaId}` : lloji });
+}
+
+/** Njofton stafin e një spitali (dhe adminët, që asnjë kërkesë të mos mbetet pa u parë). */
+export async function njoftoStafin(spitaliId: string | null, kerkesaId: string, lloji: Lloji, teksti: string, titulli = "DhuroGjak · Spitali") {
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO njoftimet (perdoruesi_id, kerkesa_id, lloji, teksti)
+    SELECT id, ${kerkesaId}, ${lloji}, ${teksti} FROM perdoruesit
+    WHERE (roli = 'spital' AND spitali_id = ${spitaliId}) OR roli = 'admin'
+    RETURNING perdoruesi_id`;
+  const ids = rows.map((r) => String(r.perdoruesi_id));
+  await dergoPush(ids, { title: titulli, body: teksti, url: `/kerkesa/${kerkesaId}`, tag: `verifikim-${kerkesaId}` });
+  return ids.length;
 }
 
 export async function lexoNjoftimet(perdoruesId: string): Promise<Njoftim[]> {

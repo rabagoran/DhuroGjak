@@ -11,12 +11,20 @@ import GabimDB from "@/components/GabimDB";
 import DoTeShkoj from "@/components/DoTeShkoj";
 import LiveRifreskim from "@/components/LiveRifreskim";
 import { shenoTeLexuaraPerKerkesen } from "@/lib/njoftimet";
-import { mbyllKerkesen, anuloPjesemarrjen, konfirmoDhurimInAction } from "../actions";
+import { mbyllKerkesen, anuloPjesemarrjen, konfirmoDhurimInAction, raporto } from "../actions";
+import { mundTeShikoje, eshteStafi, mundTeVerifikoje, mundTeRaportoje, ARSYET_E_RAPORTIMIT } from "@/lib/verifikimi";
+import VeprimetEStafit from "@/components/VeprimetEStafit";
 
 export const dynamic = "force-dynamic";
 
 const MESAZHET: Record<string, { teksti: string; ok: boolean }> = {
   postuar: { teksti: "Kërkesa u postua. Dhuruesit e përputhshëm do të njoftohen.", ok: true },
+  "ne-verifikim": { teksti: "Kërkesa u dërgua te spitali për verifikim. Stafi mund të të telefonojë; pas konfirmimit dhuruesit njoftohen automatikisht.", ok: true },
+  verifikuar: { teksti: "Kërkesa u konfirmua dhe u bë publike.", ok: true },
+  refuzuar: { teksti: "Kërkesa u refuzua. Kërkuesi u njoftua me arsyen.", ok: true },
+  rikthyer: { teksti: "Raportimet u shqyrtuan. Kërkesa është sërish publike.", ok: true },
+  raportuar: { teksti: "Faleminderit! Stafi i spitalit do ta shqyrtojë raportimin.", ok: true },
+  "raportuar-me-pare": { teksti: "E ke raportuar tashmë këtë kërkesë.", ok: true },
   perfunduar: { teksti: "Kërkesa u shënua “Përfunduar”.", ok: true },
   "perfunduar-auto": { teksti: "Dhurimi u konfirmua dhe dozat u mbuluan — kërkesa u përfundua ✅", ok: true },
   konfirmuar: { teksti: "Dhurimi u konfirmua. Dhuruesi u bllokua automatikisht për 3–4 muaj.", ok: true },
@@ -53,14 +61,19 @@ export default async function Detajet({ params, searchParams }: {
   } catch {
     return <main><Link href="/" className="link-arrow">← Kthehu te lista</Link><GabimDB provo={`/kerkesa/${id}`} teksti="Detajet nuk u ngarkuan." /></main>;
   }
-  if (!kerkesa) notFound();
+  // Kërkesat në verifikim, të refuzuara ose të pezulluara i shohin vetëm kërkuesi dhe stafi i spitalit.
+  if (!kerkesa || !mundTeShikoje(p, kerkesa)) notFound();
 
-  const pronar = p !== null && (p.id === kerkesa.krijuar_nga || p.roli === "admin");
-  const aktive = kerkesa.statusi === "aktive" && !kaSkaduar(kerkesa.afati);
+  const stafi = eshteStafi(p, kerkesa);
+  const pronar = p !== null && (p.id === kerkesa.krijuar_nga || stafi);
+  const aktive = kerkesa.statusi === "aktive" && !kerkesa.pezulluar && !kaSkaduar(kerkesa.afati);
+  const nePritje = kerkesa.statusi === "ne_verifikim" && !kaSkaduar(kerkesa.afati);
   const kaPranuar = ime === "do_shkoj" || ime === "dhuroi";
   const vendimi = vendosPergjigjen(p, kerkesa, { kaPranuar });
   const nr = Number(n);
-  const mesazh = m === "postuar" && n !== undefined
+  const mesazh = m === "verifikuar" && n !== undefined
+    ? { ok: true, teksti: nr >= 0 ? `Kërkesa u konfirmua. U njoftuan ${nr} dhurues të përputhshëm.` : "Kërkesa u konfirmua, por njoftimet nuk u dërguan." }
+    : m === "postuar" && n !== undefined
     ? { ok: true, teksti: nr > 0 ? `Kërkesa u postua. U njoftuan ${nr} dhurues të përputhshëm afër spitalit 🔔` : nr === 0 ? "Kërkesa u postua. Ende s’ka dhurues të përputhshëm të lirë afër — ndaje lidhjen me të afërmit." : "Kërkesa u postua, por njoftimet nuk u dërguan. Ndaje lidhjen me të afërmit." }
     : m ? MESAZHET[m] : undefined;
   // Java 9: kur butoni optimist shfaqet, ai vizaton edhe progresin (që të rritet menjëherë).
@@ -79,11 +92,26 @@ export default async function Detajet({ params, searchParams }: {
       </div>
 
       <section className="card stack">
-        {!aktive && <p><span className="pill pill-off">{kerkesa.statusi === "perfunduar" ? "Përfunduar ✅" : kerkesa.statusi === "anuluar" ? "Anuluar" : "Afati ka kaluar"}</span></p>}
+        {kerkesa.verifikuar && <p className="verified">✅ E verifikuar nga {kerkesa.spitali}</p>}
+        {nePritje && (
+          <div className="alert alert-info">
+            <p><strong>🏥 Në pritje të verifikimit nga spitali</strong></p>
+            <p className="small">Kërkesa nuk është publike dhe asnjë dhurues nuk është njoftuar ende. Stafi i spitalit e konfirmon me telefon.</p>
+          </div>
+        )}
+        {kerkesa.statusi === "refuzuar" && (
+          <p className="alert alert-error"><strong>Spitali nuk e konfirmoi këtë kërkesë.</strong> {kerkesa.arsyeja_refuzimit}</p>
+        )}
+        {kerkesa.pezulluar && kerkesa.statusi === "aktive" && (
+          <p className="alert alert-error"><strong>⚠️ E pezulluar pas raportimeve.</strong> Nuk shfaqet publikisht derisa stafi i spitalit ta shqyrtojë.</p>
+        )}
+        {!aktive && !nePritje && kerkesa.statusi !== "refuzuar" && !kerkesa.pezulluar && <p><span className="pill pill-off">{kerkesa.statusi === "perfunduar" ? "Përfunduar ✅" : kerkesa.statusi === "anuluar" ? "Anuluar" : "Afati ka kaluar"}</span></p>}
         {kerkesa.urgjente && aktive && <p><span className="pill pill-urgent">Urgjente</span></p>}
         {kerkesa.pershkrimi && <p>{kerkesa.pershkrimi}</p>}
         {!butoniOptimist && <Progresi pranuar={kerkesa.pranuar} dozat={kerkesa.dozat} />}
         {aktive && <LiveRifreskim url={`/api/kerkesat/${kerkesa.id}/gjendja`} />}
+        {stafi && mundTeVerifikoje(p, kerkesa) && nePritje && <VeprimetEStafit id={kerkesa.id} lloji="verifikim" kthehu="kerkesa" />}
+        {stafi && kerkesa.pezulluar && kerkesa.statusi === "aktive" && <VeprimetEStafit id={kerkesa.id} lloji="raportim" kthehu="kerkesa" />}
         <p className="muted small">Mund të dhurojnë grupet: <strong>{grupetDhuruese(kerkesa.grupi).join(", ")}</strong></p>
 
         {/* Pamja e dhuruesit */}
@@ -109,10 +137,23 @@ export default async function Detajet({ params, searchParams }: {
             <button className="btn btn-ghost btn-small" type="submit">Nuk mund të shkoj më — anulo</button>
           </form>
         )}
+        {aktive && mundTeRaportoje(p, kerkesa) && (
+          <details className="report">
+            <summary>Raporto kërkesën</summary>
+            <form action={raporto} className="refuzo" style={{ marginTop: 8 }}>
+              <input type="hidden" name="id" value={kerkesa.id} />
+              <label className="sr-only" htmlFor="arsyeja">Arsyeja</label>
+              <select id="arsyeja" name="arsyeja" defaultValue="e_rreme">
+                {Object.entries(ARSYET_E_RAPORTIMIT).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+              <button className="btn btn-ghost btn-small" type="submit">Dërgo raportimin</button>
+            </form>
+          </details>
+        )}
       </section>
 
-      {/* Pamja e pronarit */}
-      {pronar && (
+      {/* Pamja e kërkuesit dhe e stafit të spitalit */}
+      {pronar && kerkesa.verifikuar && (
         <section className="card stack" style={{ marginTop: 14 }}>
           <h2>Dhuruesit që po vijnë</h2>
           {dhuruesit.length === 0 ? (
@@ -147,6 +188,12 @@ export default async function Detajet({ params, searchParams }: {
           )}
           <p className="small muted">Telefonat e dhuruesve shfaqen vetëm këtu, vetëm për ty, sepse ata e pranuan kërkesën.</p>
         </section>
+      )}
+      {p?.id === kerkesa.krijuar_nga && nePritje && (
+        <form action={mbyllKerkesen} className="actions">
+          <input type="hidden" name="id" value={kerkesa.id} />
+          <button className="btn btn-ghost btn-small" name="statusi" value="anuluar">Anulo kërkesën</button>
+        </form>
       )}
     </main>
   );

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { perdoruesiIm, profiliIPlote, type Perdorues } from "@/lib/lejet";
 import { pjesemarrjetEMia, type PjesemarrjaIme } from "@/lib/pergjigjet";
+import { numriNePritje } from "@/lib/spitali";
+import { gjejSpitalin } from "@/lib/spitalet";
 import { ofruesitAktive } from "@/lib/auth";
 import { formatoAfatin } from "@/lib/format";
 import { ButonatEHyrjes, ButoniDalja } from "@/components/Hyrja";
@@ -16,9 +18,10 @@ export const dynamic = "force-dynamic";
 export default async function Profili() {
   let p: Perdorues | null;
   let pjesemarrjet: PjesemarrjaIme[] = [];
+  let nePritje = 0;
   try {
     p = await perdoruesiIm();
-    if (p) pjesemarrjet = await pjesemarrjetEMia(p.id);
+    if (p) [pjesemarrjet, nePritje] = await Promise.all([pjesemarrjetEMia(p.id), numriNePritje(p)]);
   } catch {
     return <main><h1>Profili im</h1><GabimDB provo="/profili" /></main>;
   }
@@ -45,6 +48,16 @@ export default async function Profili() {
         <ButoniDalja />
       </div>
 
+      {(p.roli === "spital" || p.roli === "admin") && (
+        <Link href="/spitali" className="card notif unread">
+          <h2>🏥 Paneli i spitalit</h2>
+          <p className="muted small">
+            {p.roli === "spital" ? gjejSpitalin(p.spitali_id)?.emri : "Administrator"} ·{" "}
+            {nePritje > 0 ? `${nePritje} kërkesa presin verifikimin` : "asnjë kërkesë në pritje"}
+          </p>
+        </Link>
+      )}
+
       <StatusiDhuruesit p={p} />
 
       {pjesemarrjet.length > 0 && (
@@ -64,6 +77,7 @@ export default async function Profili() {
       <FormaProfilit p={p} />
       <NjoftimetPush />
       <p className="small muted">Kërkesat që ke postuar i gjen te <Link href="/kerkesa/e-mia">Kërkesat e mia</Link>.</p>
+      <p className="small muted">ID e llogarisë: <code>{p.id}</code> (i duhet administratorit nëse punon në spital dhe kërkon qasje në panel).</p>
     </main>
   );
 }

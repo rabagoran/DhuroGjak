@@ -4,7 +4,7 @@
 
 Lista statike e Java 3 u zëvendësua me tabelën `kerkesat` në **Neon (PostgreSQL)**. Faqet lexojnë nga databaza përmes serverit; shfletuesi nuk e sheh kurrë `DATABASE_URL`.
 
-- `aplikacioni/schema.sql` — tabela `kerkesat` me kufizime (`CHECK`) për grupin, dozat (1–10) dhe statusin, plus tri kërkesa fiktive.
+- `aplikacioni/schema.sql` — tabela `kerkesat` me kufizime (`CHECK`) për grupin, dozat (1–10) dhe statusin. (Rreshtat fillestarë për prova u hoqën më vonë; skema aktuale nuk ka të dhëna demo.)
 - `aplikacioni/src/lib/db.ts` — `getSql()` me `@neondatabase/serverless` dhe `import "server-only"`.
 - `aplikacioni/src/lib/kerkesat.ts` — `lexoKerkesat()` (vetëm aktive dhe pa skaduar) dhe `gjejKerkesen(id)` (ID validohet si numër).
 - `aplikacioni/src/components/GabimDB.tsx` — mesazhi për gabim lidhjeje me “Provo përsëri”.

@@ -16,6 +16,7 @@ export default function KartaKerkeses({ kerkesa }: { kerkesa: Kerkese }) {
         </div>
         {kerkesa.urgjente && <span className="pill pill-urgent">Urgjente</span>}
       </div>
+      {kerkesa.verifikuar && <p className="verified small">✅ E verifikuar nga spitali</p>}
       <Progresi pranuar={kerkesa.pranuar} dozat={kerkesa.dozat} />
       <Link className="link-arrow" href={`/kerkesa/${kerkesa.id}`}>
         Shiko detajet <span aria-hidden="true">→</span>

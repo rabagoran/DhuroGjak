@@ -1,5 +1,6 @@
 // Validimi në server (pa varësi nga Next/DB, që të testohet me `npm test`).
 import { eshteGrup, eshteQytet, type GrupGjaku, type Gjinia } from "./gjaku.ts";
+import { gjejSpitalin } from "./spitalet.ts";
 
 export type Rezultat<T> = { ok: true; vlera: T } | { ok: false; gabimet: Record<string, string> };
 
@@ -78,6 +79,7 @@ export function validoProfilin(b: Burim, sot: Date = new Date()): Rezultat<Profi
 
 export type KerkesaInput = {
   grupi: GrupGjaku;
+  spitali_id: string;
   spitali: string;
   qyteti: string;
   dozat: number;
@@ -91,19 +93,17 @@ export type KerkesaInput = {
 export function validoKerkesen(b: Burim, tani: Date = new Date()): Rezultat<KerkesaInput> {
   const gabimet: Record<string, string> = {};
   const grupi = tekst(b, "grupi");
-  const spitali = tekst(b, "spitali");
-  const qyteti = tekst(b, "qyteti");
+  const spitaliObj = gjejSpitalin(tekst(b, "spitali_id"));
   const dozat = Number(tekst(b, "dozat"));
   const afatiRaw = tekst(b, "afati");
   const pershkrimi = tekst(b, "pershkrimi");
   const telefoni = normalizoTelefonin(tekst(b, "telefoni_kontaktit"));
 
   if (!eshteGrup(grupi)) gabimet.grupi = "Zgjidh grupin e gjakut që nevojitet.";
-  if (spitali.length < 3 || spitali.length > 120) gabimet.spitali = "Shkruaj spitalin (3–120 shkronja).";
-  if (!eshteQytet(qyteti)) gabimet.qyteti = "Zgjidh qytetin nga lista.";
+  if (!spitaliObj) gabimet.spitali_id = "Zgjidh spitalin nga lista.";
   if (!Number.isInteger(dozat) || dozat < 1 || dozat > 10) gabimet.dozat = "Dozat duhet të jenë nga 1 deri në 10.";
   if (pershkrimi.length > 500) gabimet.pershkrimi = "Përshkrimi mund të ketë deri në 500 shkronja.";
-  else if (kaOferteParash(pershkrimi) || kaOferteParash(spitali)) gabimet.pershkrimi = "Dhurimi i gjakut është falas. Kërkesat me pagesë ose shpërblim në para nuk lejohen.";
+  else if (kaOferteParash(pershkrimi)) gabimet.pershkrimi = "Dhurimi i gjakut është falas. Kërkesat me pagesë ose shpërblim në para nuk lejohen.";
   else if (kaLidhje(pershkrimi)) gabimet.pershkrimi = "Lidhjet (URL) nuk lejohen në përshkrim.";
   if (!telefonValid(telefoni)) gabimet.telefoni_kontaktit = "Shkruaj telefonin e kontaktit (shfaqet vetëm te dhuruesit që pranojnë).";
 
@@ -116,7 +116,8 @@ export function validoKerkesen(b: Burim, tani: Date = new Date()): Rezultat<Kerk
   return {
     ok: true,
     vlera: {
-      grupi: grupi as GrupGjaku, spitali, qyteti, dozat,
+      grupi: grupi as GrupGjaku,
+      spitali_id: spitaliObj!.id, spitali: spitaliObj!.emri, qyteti: spitaliObj!.qyteti, dozat,
       afati: afati.toISOString(), pershkrimi,
       urgjente: b.get("urgjente") === "on",
       telefoni_kontaktit: telefoni,

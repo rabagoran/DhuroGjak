@@ -1,7 +1,8 @@
 "use client";
 import { useActionState, useState } from "react";
 import { postoKerkesen, type GjendjaKerkeses } from "@/app/kerkesa/actions";
-import { GRUPET, QYTETET, grupetDhuruese, type GrupGjaku } from "@/lib/gjaku";
+import { GRUPET, grupetDhuruese, type GrupGjaku } from "@/lib/gjaku";
+import { SPITALET } from "@/lib/spitalet";
 import Gabim from "@/components/GabimFushe";
 
 const fillim: GjendjaKerkeses = { ok: false, mesazh: "" };
@@ -12,7 +13,7 @@ function lokal(d: Date) {
   return z.toISOString().slice(0, 16);
 }
 
-export default function FormaKerkeses({ qytetiIm, telefoniIm }: { qytetiIm: string | null; telefoniIm: string | null }) {
+export default function FormaKerkeses({ qytetiIm, telefoniIm, spitaliIm }: { qytetiIm: string | null; telefoniIm: string | null; spitaliIm: string | null }) {
   const [gjendja, veprimi, nePritje] = useActionState(postoKerkesen, fillim);
   const g = gjendja.gabimet ?? {};
   const v = gjendja.vlerat;
@@ -35,19 +36,15 @@ export default function FormaKerkeses({ qytetiIm, telefoniIm }: { qytetiIm: stri
         {grupi && <p className="hint">Mund të dhurojnë: <strong>{grupetDhuruese(grupi).join(", ")}</strong></p>}
         <Gabim teksti={g.grupi} />
       </fieldset>
-      <div className="field">
-        <label htmlFor="spitali">Spitali / qendra</label>
-        <input id="spitali" name="spitali" defaultValue={v?.spitali ?? ""} placeholder="p.sh. QKUK Prishtinë" maxLength={120} required aria-invalid={!!g.spitali} />
-        <Gabim teksti={g.spitali} />
-      </div>
       <div className="grid-2">
         <div className="field">
-          <label htmlFor="qyteti">Qyteti</label>
-          <select id="qyteti" name="qyteti" defaultValue={v?.qyteti ?? qytetiIm ?? ""} required aria-invalid={!!g.qyteti}>
-            <option value="" disabled>Zgjidh qytetin</option>
-            {QYTETET.map((q) => <option key={q}>{q}</option>)}
+          <label htmlFor="spitali_id">Spitali ku është shtruar pacienti</label>
+          <select id="spitali_id" name="spitali_id" defaultValue={v?.spitali_id ?? spitaliIm ?? SPITALET.find((s) => s.qyteti === qytetiIm)?.id ?? ""} required aria-invalid={!!g.spitali_id}>
+            <option value="" disabled>Zgjidh spitalin</option>
+            {SPITALET.map((s) => <option key={s.id} value={s.id}>{s.emri} — {s.qyteti}</option>)}
           </select>
-          <Gabim teksti={g.qyteti} />
+          <p className="hint">Stafi i këtij spitali e verifikon kërkesën para se të njoftohen dhuruesit.</p>
+          <Gabim teksti={g.spitali_id} />
         </div>
         <div className="field">
           <label htmlFor="dozat">Dozat (dhurues)</label>
@@ -71,7 +68,7 @@ export default function FormaKerkeses({ qytetiIm, telefoniIm }: { qytetiIm: stri
       </div>
       <div className="field">
         <label htmlFor="pershkrimi">Përshkrimi (opsional)</label>
-        <textarea id="pershkrimi" name="pershkrimi" defaultValue={v?.pershkrimi ?? ""} maxLength={500} placeholder="p.sh. Paraqituni te Qendra e transfuzionit, kati përdhes. Mos shkruani emrin e pacientit." />
+        <textarea id="pershkrimi" name="pershkrimi" defaultValue={v?.pershkrimi ?? ""} maxLength={500} placeholder="Ku të paraqiten dhuruesit, orari. Mos shkruani emrin e pacientit." />
         <Gabim teksti={g.pershkrimi} />
       </div>
       <label className="checkbox">

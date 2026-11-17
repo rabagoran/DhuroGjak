@@ -12,12 +12,12 @@ export type Qendra = {
 
 export const QENDRAT: readonly Qendra[] = [
   { id: "qktgj", emri: "Qendra Kombëtare e Transfuzionit të Gjakut", qyteti: "Prishtinë", adresa: "Kompleksi i QKUK-së, Prishtinë", lat: 42.6489, lng: 21.1566 },
-  { id: "pejë", emri: "Spitali Rajonal Pejë — Transfuzioni", qyteti: "Pejë", adresa: "Spitali Rajonal, Pejë", lat: 42.6593, lng: 20.2887 },
+  { id: "peje", emri: "Spitali Rajonal Pejë — Transfuzioni", qyteti: "Pejë", adresa: "Spitali Rajonal, Pejë", lat: 42.6593, lng: 20.2887 },
   { id: "prizren", emri: "Spitali Rajonal Prizren — Transfuzioni", qyteti: "Prizren", adresa: "Spitali Rajonal, Prizren", lat: 42.2153, lng: 20.7361 },
-  { id: "gjakovë", emri: "Spitali Rajonal Gjakovë — Transfuzioni", qyteti: "Gjakovë", adresa: "Spitali Rajonal, Gjakovë", lat: 42.3803, lng: 20.4309 },
+  { id: "gjakove", emri: "Spitali Rajonal Gjakovë — Transfuzioni", qyteti: "Gjakovë", adresa: "Spitali Rajonal, Gjakovë", lat: 42.3803, lng: 20.4309 },
   { id: "gjilan", emri: "Spitali Rajonal Gjilan — Transfuzioni", qyteti: "Gjilan", adresa: "Spitali Rajonal, Gjilan", lat: 42.4636, lng: 21.4694 },
   { id: "ferizaj", emri: "Spitali Rajonal Ferizaj — Transfuzioni", qyteti: "Ferizaj", adresa: "Spitali Rajonal, Ferizaj", lat: 42.3707, lng: 21.1553 },
-  { id: "mitrovicë", emri: "Spitali Rajonal Mitrovicë — Transfuzioni", qyteti: "Mitrovicë", adresa: "Spitali Rajonal, Mitrovicë", lat: 42.8833, lng: 20.8667 },
+  { id: "mitrovice", emri: "Spitali Rajonal Mitrovicë — Transfuzioni", qyteti: "Mitrovicë", adresa: "Spitali Rajonal, Mitrovicë", lat: 42.8833, lng: 20.8667 },
 ];
 
 /** Qendrat e përafërta të qyteteve, për zgjedhjen manuale kur GPS refuzohet. */

@@ -44,3 +44,7 @@ test("profili i paplotë dhe pranim i dyfishtë", () => {
   assert.equal(vendosPergjigjen({ ...dreni!, telefoni: null }, kerkesa, { tani }), "profili");
   assert.equal(vendosPergjigjen(dreni, kerkesa, { tani, kaPranuar: true }), "ekziston");
 });
+
+test("kërkesa e pezulluar pas raportimeve nuk pranon “Do të shkoj”", () => {
+  assert.equal(vendosPergjigjen(dreni, { ...kerkesa, pezulluar: true }, { tani }), "mbyllur");
+});

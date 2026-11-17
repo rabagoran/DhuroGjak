@@ -7,14 +7,35 @@ PWA (Progressive Web App) që lidh pacientët që kanë nevojë urgjente për gj
 ## Si funksionon
 
 1. **Dhuruesi** hyn dhe plotëson profilin: emri, telefoni, qyteti, gjinia, grupi i gjakut, data e dhurimit të fundit, njoftimet.
-2. **Kërkuesi** poston: “Urgjent: nevojitet gjak O- në QKUK Prishtinë, 2 doza, deri sot në 18:00”.
-3. Aplikacioni gjen dhuruesit e përputhshëm (grupi + qyteti/fqinjët + koha) dhe i **njofton** (në aplikacion + push opsional).
-4. Dhuruesi shtyp **“Do të shkoj”** → kërkuesi sheh “**1 nga 2 dhurues u gjet ✅**” (live, çdo 5 s).
-5. Kërkuesi **konfirmon dhurimin** → kur mbushen dozat kërkesa bëhet “Përfunduar”; dhuruesi **bllokohet automatikisht** 3–4 muaj.
+2. **Kërkuesi** poston: “Urgjent: nevojitet gjak O- në QKUK Prishtinë, 2 doza, deri sot në 18:00” dhe zgjedh spitalin nga lista.
+3. **Spitali verifikon:** kërkesa e familjes shkon te stafi i atij spitali, që e konfirmon me telefon. Kërkesa e postuar nga vetë stafi publikohet menjëherë.
+4. Vetëm pas verifikimit aplikacioni gjen dhuruesit e përputhshëm (grupi + qyteti/fqinjët + koha) dhe i **njofton** (në aplikacion + push opsional).
+5. Dhuruesi shtyp **“Do të shkoj”** → kërkuesi sheh “**1 nga 2 dhurues u gjet ✅**” (live, çdo 5 s).
+6. Kërkuesi ose stafi i spitalit **konfirmon dhurimin** → kur mbushen dozat kërkesa bëhet “Përfunduar”; dhuruesi **bllokohet automatikisht** 3–4 muaj.
 
 Ekstra: 🏅 distinktivat (Dhuruesi i parë, Dhurues i rregullt, Hero, Legjendë) · 📍 qendrat e transfuzionit sipas distancës · 📅 kujtuesi “Tani mund të dhuroni përsëri!” · 📊 statistikat “Këtë muaj u ndihmuan X pacientë” · 📴 lexim offline.
 
 **Pa pagesa.** Dhurimi i gjakut është vullnetar dhe falas (OBSH). Aplikacioni refuzon kërkesat që përmendin pagesë.
+
+## Verifikimi nga spitali (mbrojtja nga kërkesat e rreme)
+
+| Roli | Çfarë mund të bëjë |
+|---|---|
+| `perdorues` | Dhurues dhe kërkues. Kërkesa e tij hyn **“Në verifikim”**: nuk shfaqet publikisht dhe nuk njofton asnjë dhurues. |
+| `spital` | Stafi i një spitali konkret. Poston kërkesa të verifikuara menjëherë; te **/spitali** konfirmon ose refuzon kërkesat e familjarëve, shqyrton raportimet dhe konfirmon dhurimet. |
+| `admin` | Cakton stafin e spitaleve te **/admin**. |
+
+- Databaza e garanton: asnjë kërkesë `aktive` pa `verifikuar_ne` (`kerkesat_verifikuar_check`).
+- Stafi i një spitali **nuk** mund të verifikojë kërkesat e një spitali tjetër (kontrolli është në SQL).
+- **Raporto kërkesën:** pas 3 raportimeve kërkesa pezullohet (fshihet nga lista, “Do të shkoj” bllokohet) derisa ta shqyrtojë spitali.
+
+**Administratori i parë** caktohet një herë në Neon SQL Editor (ID-në e gjen te Profili):
+
+```sql
+UPDATE perdoruesit SET roli = 'admin' WHERE id = 'github:ID-JOTE';
+```
+
+Pastaj stafin e spitaleve e cakton nga faqja **/admin**. Jepja rolin vetëm pasi ta kesh verifikuar personin me spitalin.
 
 ## Teknologjitë
 
@@ -26,7 +47,7 @@ Ekstra: 🏅 distinktivat (Dhuruesi i parë, Dhurues i rregullt, Hero, Legjendë
 | PWA | `manifest.ts`, `public/sw.js`, `public/offline.html` |
 | Njoftimet | Tabela `njoftimet` + Web Push (`web-push`, VAPID) |
 | Publikimi | **Vercel** (+ Vercel Cron për kujtuesit) |
-| Testet / CI | `node --test` (20 teste), ESLint, GitHub Actions |
+| Testet / CI | `node --test` (28 teste), ESLint, GitHub Actions |
 
 ## Struktura
 
@@ -37,9 +58,10 @@ Ekstra: 🏅 distinktivat (Dhuruesi i parë, Dhurues i rregullt, Hero, Legjendë
 ├── skica.svg                       # Java 2 (bëj edhe skica.jpg me dorë)
 ├── .github/workflows/ci.yml        # Java 14 — CI
 └── aplikacioni/                    # projekti Next.js
-    ├── schema.sql … schema-java12.sql, schema-plote.sql
+    ├── schema.sql … schema-java12.sql, schema-verifikimi.sql, schema-plote.sql
+    ├── scripts/db-setup.mjs        # npm run db:setup
     ├── public/  (sw.js, offline.html, icons/)
-    ├── tests/   (rregullat, gjaku, validimi)
+    ├── tests/   (rregullat, gjaku, validimi, verifikimi)
     └── src/
         ├── app/         # faqet, server actions, API
         ├── components/  # KartaKerkeses, DoTeShkoj, LiveRifreskim, Qendrat, …
@@ -57,7 +79,7 @@ cp .env.example .env.local      # plotëso vlerat (shih më poshtë)
 npm run dev                     # http://localhost:3000
 ```
 
-1. **Neon:** krijo projekt → kopjo connection string te `DATABASE_URL` → hap **SQL Editor** dhe ekzekuto `aplikacioni/schema-plote.sql`.
+1. **Neon:** krijo projekt → kopjo connection string te `DATABASE_URL` → ekzekuto `npm run db:setup` (ose `aplikacioni/schema-plote.sql` në SQL Editor). Skema nuk ka të dhëna demo.
 2. **GitHub OAuth:** github.com → Settings → Developer settings → OAuth Apps → New. Callback: `http://localhost:3000/api/auth/callback/github`. Vendos `GITHUB_ID`, `GITHUB_SECRET`, `NEXTAUTH_SECRET` (`npx auth secret` ose `openssl rand -base64 32`), `NEXTAUTH_URL=http://localhost:3000`.
 3. **Push (opsional):** `npx web-push generate-vapid-keys` → `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
 
@@ -68,7 +90,7 @@ npm run dev                     # http://localhost:3000
 ## Komandat
 
 ```bash
-npm test         # 20 teste automatike
+npm test         # 28 teste automatike
 npm run lint     # ESLint
 npm run build    # build production
 ```
@@ -85,7 +107,8 @@ npm run build    # build production
 ## Siguria dhe privatësia
 
 - Grupi i gjakut dhe telefoni nuk shfaqen publikisht; telefoni zbulohet vetëm pas pranimit.
-- Serveri kontrollon hyrjen, pronësinë dhe rregullat në çdo shkrim (edhe në SQL).
+- Serveri kontrollon hyrjen, pronësinë, rolin dhe spitalin në çdo shkrim (edhe në SQL).
+- Kërkesat njoftojnë dhuruesit vetëm pas verifikimit nga spitali; kërkesat e raportuara pezullohen.
 - Bllokim transaksioni kundër mbirezervimit; `UNIQUE` kundër dyfishimeve; kufizim 3 kërkesa aktive / 5 në 24 orë.
 - CSP, X-Frame-Options, Permissions-Policy, HSTS.
 - Vendndodhja llogaritet në telefon dhe nuk dërgohet në server.
@@ -93,7 +116,7 @@ npm run build    # build production
 ## Kufizimet e njohura
 
 - Koordinatat e qendrave janë të përafërta — duhen verifikuar para përdorimit real.
-- Dhurimi konfirmohet nga kërkuesi, jo nga spitali (verifikimi zyrtar kërkon partneritet).
+- Llogaritë e stafit të spitaleve i cakton administratori me dorë; për përdorim real duhet marrëveshje zyrtare me çdo spital.
 - Push në iPhone punon vetëm kur aplikacioni është shtuar në ekranin kryesor (iOS 16.4+).
 - Polling-u (5 s) është i thjeshtë; për shumë përdorues njëkohësisht SSE/WebSocket do të ishte më efikas.
 

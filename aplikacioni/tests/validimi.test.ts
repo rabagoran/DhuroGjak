@@ -22,7 +22,7 @@ test("profili refuzon grup, qytet dhe datë të pavlefshme", () => {
   if (!r.ok) assert.deepEqual(Object.keys(r.gabimet).sort(), ["dhurimi_fundit", "emri", "gjinia", "grupi", "qyteti", "telefoni"]);
 });
 
-const kerkesaOk = { grupi: "O-", spitali: "QKUK Prishtinë", qyteti: "Prishtinë", dozat: "2", afati: "2026-12-17T18:00:00Z", pershkrimi: "Kati përdhes.", telefoni_kontaktit: "044111222" };
+const kerkesaOk = { grupi: "O-", spitali_id: "qktgj", dozat: "2", afati: "2026-12-17T18:00:00Z", pershkrimi: "Kati përdhes.", telefoni_kontaktit: "044111222" };
 
 test("kërkesa e vlefshme", () => {
   const r = validoKerkesen(forma(kerkesaOk), tani);
@@ -49,4 +49,12 @@ test("gjaku nuk shitet: refuzohen ofertat me para dhe lidhjet", () => {
   assert.ok(!r.ok && "pershkrimi" in r.gabimet);
   r = validoKerkesen(forma({ ...kerkesaOk, pershkrimi: "shiko https://x.y" }), tani);
   assert.ok(!r.ok && "pershkrimi" in r.gabimet);
+});
+
+test("kërkesa: spitali duhet të jetë nga lista; qyteti merret nga spitali", () => {
+  const r = validoKerkesen(forma(kerkesaOk), tani);
+  assert.ok(r.ok);
+  if (r.ok) { assert.equal(r.vlera.qyteti, "Prishtinë"); assert.equal(r.vlera.spitali_id, "qktgj"); }
+  const keq = validoKerkesen(forma({ ...kerkesaOk, spitali_id: "spitali-i-rreme" }), tani);
+  assert.ok(!keq.ok && "spitali_id" in keq.gabimet);
 });

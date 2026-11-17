@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 const IKONAT: Record<Njoftim["lloji"], string> = {
   kerkese_e_re: "🩸", dhurues_vjen: "✅", dhuruesi_anuloi: "⚠️", dhurim_konfirmuar: "❤", kerkesa_perfundoi: "🎉", kujtues: "📅",
+  verifikim_i_ri: "🏥", kerkesa_u_verifikua: "✅", kerkesa_u_refuzua: "⛔", kerkesa_u_raportua: "⚠️",
 };
 
 function kohaRelative(iso: string) {
