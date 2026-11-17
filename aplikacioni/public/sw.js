@@ -1,7 +1,7 @@
 // DhuroGjak service worker.
 // Cache përmban VETËM: faqen offline, ikonat dhe listën PUBLIKE të kërkesave.
 // Asnjë e dhënë private (profili, telefoni, grupi i dhuruesit) nuk ruhet këtu.
-const CACHE = "dhurogjak-public-v1";
+const CACHE = "dhurogjak-public-v2";
 const API = "/api/kerkesat";
 const SHELL = ["/offline.html", "/icons/icon-192.png", "/icons/icon-512.png"];
 
@@ -54,4 +54,29 @@ self.addEventListener("fetch", (event) => {
       return saved || new Response("Hape DhuroGjak një herë me internet.", { status: 503 });
     }));
   }
+});
+
+// Java 11 — njoftimet push (opsionale). Shfaqen vetëm nëse përdoruesi i ka lejuar.
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data && event.data.text() }; }
+  const title = data.title || "DhuroGjak";
+  event.waitUntil(self.registration.showNotification(title, {
+    body: data.body || "Ka një kërkesë të re për gjak afër teje.",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: data.tag || "dhurogjak",
+    data: { url: data.url || "/njoftimet" },
+  }));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) if (c.url === target && "focus" in c) return c.focus();
+      return self.clients.openWindow(target);
+    }),
+  );
 });

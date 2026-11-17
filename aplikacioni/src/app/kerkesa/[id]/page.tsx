@@ -10,6 +10,7 @@ import Progresi from "@/components/Progresi";
 import GabimDB from "@/components/GabimDB";
 import DoTeShkoj from "@/components/DoTeShkoj";
 import LiveRifreskim from "@/components/LiveRifreskim";
+import { shenoTeLexuaraPerKerkesen } from "@/lib/njoftimet";
 import { mbyllKerkesen, anuloPjesemarrjen, konfirmoDhurimInAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -28,10 +29,10 @@ const MESAZHET: Record<string, { teksti: string; ok: boolean }> = {
 };
 
 export default async function Detajet({ params, searchParams }: {
-  params: Promise<{ id: string }>; searchParams: Promise<{ m?: string }>;
+  params: Promise<{ id: string }>; searchParams: Promise<{ m?: string; n?: string }>;
 }) {
   const { id } = await params;
-  const { m } = await searchParams;
+  const { m, n } = await searchParams;
   let kerkesa: Kerkese | undefined;
   let p: Perdorues | null = null;
   let ime: StatusiPergjigjes | null = null;
@@ -42,6 +43,8 @@ export default async function Detajet({ params, searchParams }: {
     if (kerkesa) {
       p = await perdoruesiIm();
       if (p) {
+        // Java 11: hapja e kërkesës i shënon njoftimet e saj si të lexuara.
+        await shenoTeLexuaraPerKerkesen(p.id, kerkesa.id).catch(() => {});
         ime = await pergjigjaIme(kerkesa.id, p.id);
         if (p.id === kerkesa.krijuar_nga || p.roli === "admin") dhuruesit = await pergjigjetPerPronar(p, kerkesa.id);
         if (ime === "do_shkoj" || ime === "dhuroi") kontakti = await kontaktiPerDhuruesin(p, kerkesa.id);
@@ -56,7 +59,10 @@ export default async function Detajet({ params, searchParams }: {
   const aktive = kerkesa.statusi === "aktive" && !kaSkaduar(kerkesa.afati);
   const kaPranuar = ime === "do_shkoj" || ime === "dhuroi";
   const vendimi = vendosPergjigjen(p, kerkesa, { kaPranuar });
-  const mesazh = m ? MESAZHET[m] : undefined;
+  const nr = Number(n);
+  const mesazh = m === "postuar" && n !== undefined
+    ? { ok: true, teksti: nr > 0 ? `Kërkesa u postua. U njoftuan ${nr} dhurues të përputhshëm afër spitalit 🔔` : nr === 0 ? "Kërkesa u postua. Ende s’ka dhurues të përputhshëm të lirë afër — ndaje lidhjen me të afërmit." : "Kërkesa u postua, por njoftimet nuk u dërguan. Ndaje lidhjen me të afërmit." }
+    : m ? MESAZHET[m] : undefined;
   // Java 9: kur butoni optimist shfaqet, ai vizaton edhe progresin (që të rritet menjëherë).
   const butoniOptimist = !pronar && aktive && !kaPranuar && (vendimi === "ok" || vendimi === "hyr");
 

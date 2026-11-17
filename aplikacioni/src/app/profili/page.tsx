@@ -7,6 +7,7 @@ import { formatoAfatin } from "@/lib/format";
 import { ButonatEHyrjes, ButoniDalja } from "@/components/Hyrja";
 import FormaProfilit from "@/components/FormaProfilit";
 import StatusiDhuruesit from "@/components/StatusiDhuruesit";
+import NjoftimetPush from "@/components/NjoftimetPush";
 import GabimDB from "@/components/GabimDB";
 
 export const metadata: Metadata = { title: "Profili" };
@@ -61,6 +62,7 @@ export default async function Profili() {
       )}
 
       <FormaProfilit p={p} />
+      <NjoftimetPush />
       <p className="small muted">Kërkesat që ke postuar i gjen te <Link href="/kerkesa/e-mia">Kërkesat e mia</Link>.</p>
     </main>
   );

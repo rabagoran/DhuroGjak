@@ -6,6 +6,7 @@ import { validoKerkesen } from "@/lib/validimi";
 import { krijoKerkesen, ndryshoStatusin, gjejKerkesen } from "@/lib/kerkesat";
 import { pergjigjuNeKerkese, anuloPergjigjen, konfirmoDhurimin, kontaktiPerDhuruesin } from "@/lib/pergjigjet";
 import type { VendimPergjigjeje } from "@/lib/rregullat";
+import { njoftoDhuruesitEPerputhshem } from "@/lib/njoftimet";
 
 export type GjendjaKerkeses = { ok: boolean; mesazh: string; gabimet?: Record<string, string>; vlerat?: Record<string, string> };
 
@@ -13,17 +14,22 @@ const vlerat = (f: FormData) => Object.fromEntries([...f.entries()].map(([k, v])
 
 export async function postoKerkesen(_: GjendjaKerkeses, formData: FormData): Promise<GjendjaKerkeses> {
   let id: string;
+  let njoftuar = 0;
   try {
     const p = await perdoruesiIm();
     if (!p) return { ok: false, mesazh: "Hyr në llogari para se të postosh kërkesë.", vlerat: vlerat(formData) };
     const r = validoKerkesen(formData);
     if (!r.ok) return { ok: false, mesazh: "Kontrollo fushat e shënuara.", gabimet: r.gabimet, vlerat: vlerat(formData) };
     id = await krijoKerkesen(p, r.vlera);
+    // Java 11: njofto dhuruesit e përputhshëm. Nëse njoftimi dështon, kërkesa mbetet e postuar.
+    try {
+      njoftuar = await njoftoDhuruesitEPerputhshem({ id, ...r.vlera, krijuar_nga: p.id });
+    } catch { njoftuar = -1; }
   } catch {
     return { ok: false, mesazh: "Nuk u lidhëm me databazën. Kërkesa nuk u postua.", vlerat: vlerat(formData) };
   }
   revalidatePath("/");
-  redirect(`/kerkesa/${id}?m=postuar`);
+  redirect(`/kerkesa/${id}?m=postuar&n=${njoftuar}`);
 }
 
 export async function mbyllKerkesen(formData: FormData) {

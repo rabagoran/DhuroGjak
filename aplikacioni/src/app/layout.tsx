@@ -3,6 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 import Navigimi from "@/components/Navigimi";
 import Pwa from "@/components/Pwa";
+import Zilja from "@/components/Zilja";
 
 export const metadata: Metadata = {
   title: { default: "DhuroGjak", template: "%s · DhuroGjak" },
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <header className="topbar">
           <div className="topbar-inner">
             <Link href="/" className="brand"><span aria-hidden="true">🩸</span> DhuroGjak</Link>
+            <Zilja />
           </div>
         </header>
         <Pwa />

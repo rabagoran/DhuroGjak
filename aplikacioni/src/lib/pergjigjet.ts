@@ -3,6 +3,8 @@ import { getSql } from "./db";
 import type { Perdorues } from "./lejet";
 import { gjejKerkesen } from "./kerkesat";
 import { vendosPergjigjen, type VendimPergjigjeje } from "./rregullat";
+import { njofto } from "./njoftimet";
+import { distinktivat } from "./gjaku";
 
 export type StatusiPergjigjes = "do_shkoj" | "dhuroi" | "anuluar";
 
@@ -43,7 +45,15 @@ export async function pergjigjuNeKerkese(p: Perdorues, kerkesaId: string): Promi
     ON CONFLICT (kerkesa_id, dhuruesi_id)
       DO UPDATE SET statusi = 'do_shkoj', perditesuar_ne = NOW() WHERE pergjigjet.statusi = 'anuluar'
     RETURNING id`;
-  return rows.length === 1 ? "ok" : "plot";
+  if (rows.length !== 1) return "plot";
+  // Java 11: kërkuesi njoftohet “1 nga 2 dhurues u gjet ✅”.
+  if (kerkesa.krijuar_nga) {
+    const n = Math.min(kerkesa.pranuar + 1, kerkesa.dozat);
+    await njofto(kerkesa.krijuar_nga, kerkesa.id, "dhurues_vjen",
+      `${p.emri} po vjen për ${kerkesa.grupi} në ${kerkesa.spitali}. ${n} nga ${kerkesa.dozat} dhurues u gjet${n >= kerkesa.dozat ? " ✅" : ""}.`,
+      `✅ ${n} nga ${kerkesa.dozat} dhurues u gjet`).catch(() => {});
+  }
+  return "ok";
 }
 
 export async function anuloPergjigjen(p: Perdorues, kerkesaId: string): Promise<boolean> {
@@ -51,8 +61,13 @@ export async function anuloPergjigjen(p: Perdorues, kerkesaId: string): Promise<
   const rows = await sql`
     UPDATE pergjigjet SET statusi = 'anuluar', perditesuar_ne = NOW()
     WHERE kerkesa_id = ${kerkesaId} AND dhuruesi_id = ${p.id} AND statusi = 'do_shkoj'
-    RETURNING id`;
-  return rows.length === 1;
+    RETURNING id, (SELECT krijuar_nga FROM kerkesat WHERE id = ${kerkesaId}) AS pronari`;
+  if (rows.length !== 1) return false;
+  if (rows[0].pronari) {
+    await njofto(String(rows[0].pronari), kerkesaId, "dhuruesi_anuloi",
+      `${p.emri} nuk mund të vijë më. Kërkesa është sërish e hapur për dhurues të tjerë.`).catch(() => {});
+  }
+  return true;
 }
 
 /** Dhuruesit e kërkesës — vetëm për pronarin. Telefoni zbulohet sepse dhuruesi ka pranuar. */
@@ -106,8 +121,19 @@ export async function konfirmoDhurimin(p: Perdorues, kerkesaId: string, pergjigj
         AND (SELECT COUNT(*) FROM pergjigjet WHERE kerkesa_id = ${kerkesaId} AND statusi = 'dhuroi') + 1 >= (SELECT dozat FROM u LIMIT 1)
       RETURNING id
     )
-    SELECT (SELECT COUNT(*) FROM d)::int AS konfirmuar, (SELECT COUNT(*) FROM m)::int AS perfunduar`;
-  return { konfirmuar: rows[0]?.konfirmuar === 1, perfunduar: rows[0]?.perfunduar === 1 };
+    SELECT (SELECT COUNT(*) FROM d)::int AS konfirmuar, (SELECT COUNT(*) FROM m)::int AS perfunduar,
+           (SELECT dhuruesi_id FROM u LIMIT 1) AS dhuruesi_id`;
+  const r = { konfirmuar: rows[0]?.konfirmuar === 1, perfunduar: rows[0]?.perfunduar === 1 };
+  if (r.konfirmuar && rows[0].dhuruesi_id) {
+    // Java 11: dhuruesi falënderohet; përmendet distinktivi më i lartë.
+    const id = String(rows[0].dhuruesi_id);
+    const [u] = await sql`SELECT dhurime FROM perdoruesit WHERE id = ${id}`;
+    const fituar = distinktivat(Number(u?.dhurime ?? 0)).at(-1);
+    await njofto(id, kerkesaId, "dhurim_konfirmuar",
+      `Faleminderit! Dhurimi yt u konfirmua${fituar ? ` — distinktivi: ${fituar.ikona} ${fituar.emri}` : ""}. Je në pushim për 3–4 muaj.`,
+      "❤ Dhurimi u konfirmua").catch(() => {});
+  }
+  return r;
 }
 
 export type PjesemarrjaIme = { kerkesa_id: string; spitali: string; grupi: string; afati: string; statusi: StatusiPergjigjes };
